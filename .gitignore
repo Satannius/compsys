@@ -1,8 +1,11 @@
-# globs
+# Generated files - macOS
 *.DS_Store
 
-# compilation files
+# Generated files - editors
+**/.vscode
+
+# C compilation files
 *.dSYM
 
-# Test files
+# Test folders
 **/test_files
