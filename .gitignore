@@ -1,2 +1,8 @@
 # globs
 *.DS_Store
+
+# compilation files
+*.dSYM
+
+# Test files
+*/test_files
