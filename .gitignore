@@ -5,4 +5,4 @@
 *.dSYM
 
 # Test files
-*/test_files
+**/test_files
