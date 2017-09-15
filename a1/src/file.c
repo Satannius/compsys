@@ -32,7 +32,7 @@ int empty_checker(FILE* fp) {
     return 1;
   else
     return 0;
-  }
+}
 
 
 int ascii_checker(FILE* fp) {
@@ -147,8 +147,8 @@ int main(int argc, char *argv[]) {
     unsigned long max_length = strlen(argv[1]);
     int x;
     for (x = 2; x <= argc; x++) {
-      if (max_length < strlen(argv[x])){
-        max_length = strlen(argv[x]);
+      if (max_length < strlen(argv[x-1])){
+        max_length = strlen(argv[x-1]);
       }
     }
     int i = 1;
