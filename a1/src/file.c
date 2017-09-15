@@ -5,9 +5,9 @@
 
 
 const char * const FILE_TYPE_STRINGS[] = {
-  	"data",                                //0
-  	"empty",                               //1
-  	"ASCII text",                          //2
+    "data",                                //0
+    "empty",                               //1
+    "ASCII text",                          //2
     "ISO-8859 text",                       //3
     "UTF-8 Unicode text",                  //4
     "Big-endian UTF-16 Unicode text",      //5
@@ -52,7 +52,10 @@ int ascii_checker(FILE* fp) {
 }
 
 void type_detector(FILE* fp, char *path) {
-  if (empty_checker(fp) == 1) {
+  if (fp == NULL) {
+    print_error(path, errno);
+  }
+  else if (empty_checker(fp) == 1) {
     print_message(path, 1);
   }
   else if (ascii_checker(fp) == 2)
@@ -67,16 +70,10 @@ void type_detector(FILE* fp, char *path) {
 int main(int argc, char *argv[]) {
   if (argc >= 2){
     int i = 1;
-    while( i+1 <= argc)
+    while( i < argc)
     {
       FILE *fp;
       fp = fopen(argv[i],"r");
-      
-      if (fp == NULL){
-        print_error(argv[i], errno);
-        break;
-        //exit(EXIT_SUCCESS);
-      }
       
       type_detector(fp, argv[i]);
       
@@ -85,9 +82,4 @@ int main(int argc, char *argv[]) {
     exit(EXIT_SUCCESS);
   
   }
-    // If there is more than one argument.
-    else { 
-      fprintf(stderr, "Usage: %s path\n", argv[0]);
-      exit(EXIT_FAILURE);
-    }
 }
