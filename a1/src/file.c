@@ -14,16 +14,15 @@ const char * const FILE_TYPE_STRINGS[] = {
 };
 
 // Assumes: errnum is a valid error number
-int print_error(const char *path, int max_length, int errnum) {
+int print_error(const char *path, unsigned long max_length, int errnum) {
   return fprintf(stdout, "%s:%*scannot determine (%s)\n",
-    path, max_length - sizeof(path), " ", strerror(errnum));
+    path, (int)(max_length - strlen(path)), " ", strerror(errnum));
 }
 
-int print_message(char *path, int max_length, int type_num) {
+int print_message(char *path, unsigned long max_length, int type_num) {
   //return printf("%s: %s\n", path, FILE_TYPE_STRINGS[type_num]);
   return fprintf(stdout, "%s:%*s%s\n",
-  path, max_length - sizeof(path), " ", FILE_TYPE_STRINGS[type_num]);
-
+  path, (int)(max_length - strlen(path)), " ", FILE_TYPE_STRINGS[type_num]);
 }
 
 int empty_checker(FILE* fp) {
@@ -35,6 +34,7 @@ int empty_checker(FILE* fp) {
     return 0;
   }
 
+
 int ascii_checker(FILE* fp) {
   int c;
   int result = 2; 
@@ -42,40 +42,34 @@ int ascii_checker(FILE* fp) {
   while (!feof(fp)) {
     c = fgetc(fp);
     if(c != EOF) {
-      //Checks for non- Ascii exclude in range (07-13, 27, 32-126)
       if (!( (c >= 0x07 && c <= 0x0D) || c == 0x1B || 
-        (c >= 0x20 && c <= 0x7E) )) {  
-        //Checks for ISO in range (160 - 255)
-        if (c >= 0xA0 && c <= 0xFF){
-          //Not ascii anymore but maybe still ISO
-          result = 3;   
-          //Not ASCII or ISO (128 - 159)
-          if(c >= 0x80 && c <= 0x9F){
-            //Not ascii or  ISO anymore
-            result = 4;
-            break;
-          }
-        }
+        (c >= 0x20 && c <= 0x7E) )) {
+        result = 0;
+        break;
       } 
     }
   }
-  if (result == 3)
-  {
-    //Then it is ISO
-    return result;
-  }
-  else if(result == 4)
-  {
-    //Then it might be UTF
-    return result;
-  }
-  else
-  {
-    //Then it is ASCII
-    return result;
-  }
-  printf("%i",result); 
+  return result;
 }
+
+
+int iso_checker(FILE* fp) {
+  int c;
+  int result = 3; 
+  fseek(fp, 0, SEEK_SET);
+  while (!feof(fp)) {
+    c = fgetc(fp);
+    if(c != EOF) {
+      if (!( (c >= 0x07 && c <= 0x0D) || c == 0x1B || 
+        (c >= 0x20 && c <= 0x7E) || (c >= 0xA0 && c <= 0xFF) )) {  
+        result = 0;
+        break;
+      }
+    }
+  } 
+  return result;
+}
+
 
 int utf8_checker(FILE* fp) {
   int c;
@@ -88,14 +82,14 @@ int utf8_checker(FILE* fp) {
         (((c+2) & 0x80) == 0x80) && (((c+3) & 0x80) == 0x80)){
         result = 4;
       }
-      if (( (c & 0xE0) == 0xE0) && (((c+1) & 0x80) == 0x80)
+      else if (( (c & 0xE0) == 0xE0) && (((c+1) & 0x80) == 0x80)
               && (((c+2) & 0x80) == 0x80)) {
         result = 4;
       }
-      if (((c & 0xc0) == 0xc0) && (((c+1) & 0x80) == 0x80)) {
+      else if (((c & 0xc0) == 0xc0) && (((c+1) & 0x80) == 0x80)) {
         result = 4;
       } 
-      if ((c & 0xc0) == 0xc0) {
+      else if ((c & 0xc0) == 0xc0) {
         result = 4;
       }
     }
@@ -121,7 +115,7 @@ int utf16_checker(FILE* fp) {
 }
 
 
-void type_detector(FILE* fp, char *path, int max_length) {
+void type_detector(FILE* fp, char *path, unsigned long max_length) {
   if (fp == NULL) {
     print_error(path, max_length, errno);
   }
@@ -147,19 +141,18 @@ void type_detector(FILE* fp, char *path, int max_length) {
     print_message(path, max_length, 0);
 }
 
-//Main function
+
 int main(int argc, char *argv[]) {
   if (argc >= 2){
-    int max_length = sizeof(argv[1]);
+    unsigned long max_length = strlen(argv[1]);
     int x;
     for (x = 2; x <= argc; x++) {
-      if (max_length < sizeof(argv[x])){
-        max_length = sizeof(argv[x]);
+      if (max_length < strlen(argv[x])){
+        max_length = strlen(argv[x]);
       }
     }
-
     int i = 1;
-    while( i < argc)
+    while( i < argc )
     {
       FILE *fp;
       fp = fopen(argv[i],"r");
