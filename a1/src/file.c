@@ -16,8 +16,8 @@ const char * const FILE_TYPE_STRINGS[] = {
 
 // Assumes: errnum is a valid error number
 int print_error(char *path, int errnum) {
-    return fprintf(stdout, "%s: cannot determine (%s)\n",
-      path, strerror(errnum));
+  return fprintf(stdout, "%s: cannot determine (%s)\n",
+    path, strerror(errnum));
 }
 
 int print_message(char *path, int type_num) {
@@ -75,6 +75,33 @@ int ascii_checker(FILE* fp) {
   printf("%i",result); 
 }
 
+int utf8_checker(FILE* fp) {
+  int c;
+  int result = 0; 
+  fseek(fp, 0, SEEK_SET);
+  while (!feof(fp)) {
+    c = fgetc(fp);
+    if(c != EOF) {
+      if (((c & 0xF0) == 0xF0) && (((c+1) & 0x80) == 0x80) && 
+        (((c+2) & 0x80) == 0x80) && (((c+3) & 0x80) == 0x80)){
+        result = 4;
+      }
+      if (( (c & 0xE0) == 0xE0) && (((c+1) & 0x80) == 0x80)
+              && (((c+2) & 0x80) == 0x80)) {
+        result = 4;
+      }
+      if (((c & 0xc0) == 0xc0) && (((c+1) & 0x80) == 0x80)) {
+        result = 4;
+      } 
+      if ((c & 0xc0) == 0xc0) {
+        result = 4;
+      }
+    }
+  }
+  return result;
+}
+
+
 void type_detector(FILE* fp, char *path) {
   if (fp == NULL) {
     print_error(path, errno);
@@ -82,14 +109,16 @@ void type_detector(FILE* fp, char *path) {
   else if (empty_checker(fp) == 1) {
     print_message(path, 1);
   }
-  else if (ascii_checker(fp) == 2)
-  {
+  else if (ascii_checker(fp) == 2) {
     print_message(path, 2);
   }
   else if (ascii_checker(fp) == 3)
   {
     print_message(path, 3);
   }  
+  else if(utf8_checker(fp) == 4) {
+    print_message(path, 4);
+  }
   else
     print_message(path, 0);
 }
@@ -107,7 +136,6 @@ int main(int argc, char *argv[]) {
        
       i++;
     }
-    exit(EXIT_SUCCESS);
-  
+    exit(EXIT_SUCCESS); 
   }
 }
