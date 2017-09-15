@@ -47,8 +47,8 @@ iconv -f UTF-8 -t ISO-8859-1 test_files/iso-8859 > test_files/iso-8859.input
 echo "Æøå" > test_files/utf-8.input
 
 # Little endian UTF-16 Unicode text
-# echo "Hello, world!" > test_files/utf16l
-iconv -f UTF-8 -t UTF-16 test_files/utf-8.input > test_files/utf-16-unknown
+echo "Hello, world!" > test_files/utf-16
+iconv -f UTF-8 -t UTF-16 test_files/utf-16 > test_files/utf-16-unknown
 FILE_ENCODING="$( file --brief --mime-encoding test_files/utf-16-unknown )"
 iconv -f "$FILE_ENCODING" -t UTF-16LE test_files/utf-16-unknown > test_files/utf-16le.input
 
@@ -59,10 +59,11 @@ echo "Running tests.."
 exitcode=0
 f=test_files/*.input
 echo ">>> Testing ${f}.."
-file    ${f} | sed 's/ASCII text.*/ASCII text/' \
-  | sed 's/ data/data/' > test_files/expected \
-  | sed 's/Big-endian UTF-16 Unicode text.*/Big-endian UTF-16 Unicode text/' \
-  | sed 's/Little-endian UTF-16 Unicode text.*/Little-endian UTF-16 Unicode text/'
+file    ${f} | sed \
+  -e 's/ASCII text.*/ASCII text/' \
+  -e 's/ data/data/' > test_files/expected \
+  -e 's/Big-endian.*/Big-endian UTF-16 Unicode text/' \
+  -e 's/Little-endian.*/Little-endian UTF-16 Unicode text/'
 ./file  ${f} > test_files/actual
 
 if ! diff -u test_files/expected test_files/actual
