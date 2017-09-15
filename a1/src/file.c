@@ -40,15 +40,39 @@ int ascii_checker(FILE* fp) {
   while (!feof(fp)) {
     c = fgetc(fp);
     if(c != EOF) {
+      //Checks for non- Ascii exclude in range (07-13, 27, 32-126)
       if (!( (c >= 0x07 && c <= 0x0D) || c == 0x1B || 
-        (c >= 0x20 && c <= 0x7E) )) {
-        
-        result = 0;
-        break;
+        (c >= 0x20 && c <= 0x7E) )) {  
+        //Checks for ISO in range (160 - 255)
+        if (c >= 0xA0 && c <= 0xFF){
+          //Not ascii anymore but maybe still ISO
+          result = 3;   
+          //Not ASCII or ISO (128 - 159)
+          if(c >= 0x80 && c <= 0x9F){
+            //Not ascii or  ISO anymore
+            result = 4;
+            break;
+          }
+        }
       } 
     }
   }
-  return result;
+  if (result == 3)
+  {
+    //Then it is ISO
+    return result;
+  }
+  else if(result == 4)
+  {
+    //Then it might be UTF
+    return result;
+  }
+  else
+  {
+    //Then it is ASCII
+    return result;
+  }
+  printf("%i",result); 
 }
 
 void type_detector(FILE* fp, char *path) {
@@ -62,11 +86,15 @@ void type_detector(FILE* fp, char *path) {
   {
     print_message(path, 2);
   }
+  else if (ascii_checker(fp) == 3)
+  {
+    print_message(path, 3);
+  }  
   else
     print_message(path, 0);
 }
 
-
+//Main function
 int main(int argc, char *argv[]) {
   if (argc >= 2){
     int i = 1;
@@ -76,7 +104,7 @@ int main(int argc, char *argv[]) {
       fp = fopen(argv[i],"r");
       
       type_detector(fp, argv[i]);
-      
+       
       i++;
     }
     exit(EXIT_SUCCESS);
