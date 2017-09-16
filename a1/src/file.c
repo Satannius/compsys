@@ -24,7 +24,7 @@ int empty_checker(FILE* fp) {
 }
 
 //Checks if the file contains non-ascii characters, if none is found 
-//return 2 which mean the file is ASCII.
+//returns 2 which means the file is ASCII.
 int ascii_checker(FILE* fp) {
   int c;
   int result = 2; 
@@ -44,7 +44,7 @@ int ascii_checker(FILE* fp) {
 }
 
 //Checks if the file contains non ISO-8859-1-likebytes, if none is found 
-//return 3 which mean the file is ISO.
+//returns 3 which means the file is ISO.
 int iso_checker(FILE* fp) {
   int c;
   int result = 3; 
@@ -63,7 +63,8 @@ int iso_checker(FILE* fp) {
   return result;
 }
 
-
+//Checks if the file encoded in UTF-8
+//returns 4 which means the file is using UTF-8 encoding.
 int utf8_checker(FILE* fp) {
   int c;
   int result = 0; 
@@ -71,6 +72,8 @@ int utf8_checker(FILE* fp) {
   while (!feof(fp)) {
     c = fgetc(fp);
     if(c != EOF) {
+      //checks if it fits into any number of bytes
+      //by checking its designated bit-sequence
       if (((c & 0xF0) == 0xF0) && (((c+1) & 0x80) == 0x80) && 
         (((c+2) & 0x80) == 0x80) && (((c+3) & 0x80) == 0x80)){
         result = 4;
@@ -90,24 +93,25 @@ int utf8_checker(FILE* fp) {
   return result;
 }
 
-
+//Checks if the file encoded in UTF-16
+//returns 5 which means the file is using UTF-16 big endian encoding.
+//returns 6 which means the file is using UTF-16 little endian encoding.
 int utf16_checker(FILE* fp) {
   int result = 0; 
   fseek(fp, 0, SEEK_SET);
   int first  = fgetc(fp);
   int second = fgetc(fp);
-
+  //checks if it fits in any utf-16 encoding pattern by its byte-order-mark
   if ((first == 0xFE) && (second == 0xFF)) {
     result = 5;
   }
   else if ((first == 0xFF) && (second == 0xFE)) {
     result = 6;
   }
-
   return result;
 }
 
-//Returns the corresponding e_num.
+//Returns the corresponding error number.
 int type_detector(FILE* fp) {
   if (fp == NULL) {
     return -1;
@@ -154,14 +158,16 @@ int main(int argc, char *argv[]) {
       if (type_detector(fp) == -1)
       {
         //If no file has been found throw an error
-        fprintf(stdout, "%s:%*scannot determine(%s)\n", argv[i], (int)((max_length+1) - strlen(argv[i])), " ", strerror(errno));
+        fprintf(stdout, "%s:%*scannot determine(%s)\n", argv[i], 
+          (int)((max_length+1) - strlen(argv[i])), " ", strerror(errno));
       }
       else
       {
         //If the file has been found, the filetype will be printed out.
-        fprintf(stdout,"%s:%*s%s\n", argv[i], (int)((max_length+1) - strlen(argv[i]))," ", FILE_TYPE_STRINGS[type_detector(fp)]);  
+        fprintf(stdout,"%s:%*s%s\n", argv[i], (int)((max_length+1) - strlen(argv[i])),
+          " ", FILE_TYPE_STRINGS[type_detector(fp)]);  
       }
-      i++;
+      i ++;
     }
     exit(EXIT_SUCCESS); 
   }
