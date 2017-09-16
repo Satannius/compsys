@@ -41,26 +41,26 @@ touch test_files/empty2.input
 
 # ISO-8859 files
 echo "Æøå" > test_files/iso-8859
-iconv -f UTF-8 -t ISO-8859-1 test_files/iso-8859 > test_files/iso-8859.input
+iconv -f UTF-8 -t ISO-8859-1 test_files/iso-8859 > test_files/iso-8859a.input
 
 echo "Hello World!" > test_files/iso-8859
-iconv -f UTF-8 -t ISO-8859-1 test_files/iso-8859 > test_files/iso-8859.input
-
-echo "hej" > test_files/iso-8859
 iconv -f UTF-8 -t ISO-8859-1 test_files/iso-8859 > test_files/iso-8859b.input
 
+echo "hej" > test_files/iso-8859
+iconv -f UTF-8 -t ISO-8859-1 test_files/iso-8859 > test_files/iso-8859c.input
+
 # UTF-8 files
-echo "Æøå" > test_files/utf-8.input
+echo "Æøå" > test_files/utf-8a.input
 
 echo "WƎƎƎƎ" > test_files/utf-8b.input
 
-echo "hej" > test_files/utf-8b.input
+echo "†††" > test_files/utf-8c.input
 
 # Little endian UTF-16 Unicode text
-echo "Hello, world!" > test_files/utf-16
+echo "In hoc codex vinces" > test_files/utf-16
 iconv -f UTF-8 -t UTF-16 test_files/utf-16 > test_files/utf-16-unknown
 FILE_ENCODING="$( file --brief --mime-encoding test_files/utf-16-unknown )"
-iconv -f "$FILE_ENCODING" -t UTF-16LE test_files/utf-16-unknown > test_files/utf-16le.input
+iconv -f "$FILE_ENCODING" -t UTF-16LE test_files/utf-16-unknown > test_files/utf-16lea.input
 
 echo "H@XX0rƵƵ!" > test_files/utf-16
 iconv -f UTF-8 -t UTF-16 test_files/utf-16 > test_files/utf-16-unknown
@@ -73,7 +73,7 @@ FILE_ENCODING="$( file --brief --mime-encoding test_files/utf-16-unknown )"
 iconv -f "$FILE_ENCODING" -t UTF-16LE test_files/utf-16-unknown > test_files/utf1-16lec.input
 
 # Big endian UTF-16 Unicode text
-iconv -f "$FILE_ENCODING" -t UTF-16BE test_files/utf-16-unknown > test_files/utf-16be.input
+iconv -f "$FILE_ENCODING" -t UTF-16BE test_files/utf-16-unknown > test_files/utf-16bea.input
 
 iconv -f "$FILE_ENCODING" -t UTF-16BE test_files/utf-16-unknown > test_files/utf-16beb.input
 
