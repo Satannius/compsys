@@ -21,6 +21,8 @@ p/x 0b110
 p "Dec representation of 110_2:"
 p/d 0b110
 
+# Exercise 3
+
 # Defining macros, since gdb will not detect those defined in file
 macro define UTF8_2B(value) (((value & 0xe0) == 0xc0) ? 1 : 0) // 2-byte
 macro define UTF8_3B(value) (((value & 0xf0) == 0xe0) ? 1 : 0) // 3-byte
