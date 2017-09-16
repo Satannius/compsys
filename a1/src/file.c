@@ -115,7 +115,7 @@ int utf16_checker(FILE* fp) {
   return result;
 }
 
-//Returns the corresponding error number.
+//Returns the corresponding number.
 int type_detector(FILE* fp) {
   if (fp == NULL) {
     return -1;
@@ -161,7 +161,7 @@ int main(int argc, char *argv[]) {
 
       if (type_detector(fp) == -1)
       {
-        //If no file has been found throw an error
+        //If no file has been found give error message.
         fprintf(stdout, "%s:%*scannot determine(%s)\n", argv[i], 
           (int)((max_length+1) - strlen(argv[i])), " ", strerror(errno));
       }
@@ -177,6 +177,7 @@ int main(int argc, char *argv[]) {
   }
   else
   {
+    //If no file has been chosen.
     fprintf(stderr, "Usage: %s path\n", argv[0]);
     return EXIT_FAILURE;
   }

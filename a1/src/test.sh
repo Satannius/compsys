@@ -15,36 +15,46 @@ echo "Generating test files.."
 
 # ASCII text files
 printf "Hello, World!" > test_files/ascii1.input        # Plain ASCII
-# printf "Hello, World!\n" > test_files/ascii2.input      # W/ linebreak
-# echo "\n" > test_files/ascii3.input                     # Linebreak
-# printf "             \n" > test_files/ascii4.input      # Spaces w/ linebreak
-# printf "\x1b\n" > test_files/ascii5.input               # Hexadecimals
-# printf "^$?" > test_files/ascii6.input                  # Special chars
-# printf "\110\151" > test_files/ascii7.input             # Octals
-# printf "\72\105" > test_files/ascii8.input              # Decimals
-# printf "\110\105\x0a" > test_files/ascii9.input         # All the -als!
-# echo "Hello, World..." > test_files/ascii10.input       # Using echo
+printf "Hello, World!\n" > test_files/ascii2.input      # W/ linebreak
+echo "\n" > test_files/ascii3.input                     # Linebreak
+printf "             \n" > test_files/ascii4.input      # Spaces w/ linebreak
+printf "\x1b\n" > test_files/ascii5.input               # Hexadecimals
+printf "^$?" > test_files/ascii6.input                  # Special chars
+printf "\110\151" > test_files/ascii7.input             # Octals
+printf "\72\105" > test_files/ascii8.input              # Decimals
+printf "\110\105\x0a" > test_files/ascii9.input         # All the -als!
+echo "Hello, World..." > test_files/ascii10.input       # Using echo
 
 # DATA files
 printf "Hello,\x00World!\n" > test_files/data1.input    # NUL + nl w/ ASCII
-# printf "\x00\x0a" > test_files/data2.input              # Hexadecimals
-# printf "\x48\x69\x00\n" > test_files/data3.input        # Mix hexadecimals
-# printf "\000\012" > test_files/data4.input              # Octals
-# printf "\0\10" > test_files/data5.input                 # Decimals
-# printf "\0\65\x0a" > test_files/data6.input             # All the -als!
-# printf "\x01\x02\x03\x04\x05" > test_files/data7.input  # Various hex codes
-# printf "\x06\x07\x08\x09\x10" > test_files/data8.input  # Various hex codes
+printf "\x00\x0a" > test_files/data2.input              # Hexadecimals
+printf "\x48\x69\x00\n" > test_files/data3.input        # Mix hexadecimals
+printf "\000\012" > test_files/data4.input              # Octals
+printf "\0\10" > test_files/data5.input                 # Decimals
+printf "\0\65\x0a" > test_files/data6.input             # All the -als!
+printf "\x01\x02\x03\x04\x05" > test_files/data7.input  # Various hex codes
+printf "\x06\x07\x08\x09\x10" > test_files/data8.input  # Various hex codes
 
 # Empty files
 printf "" > test_files/empty1.input # Empty files cannot be created with echo.
-# touch test_files/empty2.input
+touch test_files/empty2.input
 
 # ISO-8859 files
 echo "Æøå" > test_files/iso-8859
 iconv -f UTF-8 -t ISO-8859-1 test_files/iso-8859 > test_files/iso-8859.input
 
+echo "Hello World!" > test_files/iso-8859
+iconv -f UTF-8 -t ISO-8859-1 test_files/iso-8859 > test_files/iso-8859.input
+
+echo "hej" > test_files/iso-8859
+iconv -f UTF-8 -t ISO-8859-1 test_files/iso-8859 > test_files/iso-8859b.input
+
 # UTF-8 files
 echo "Æøå" > test_files/utf-8.input
+
+echo "WƎƎƎƎ" > test_files/utf-8b.input
+
+echo "hej" > test_files/utf-8b.input
 
 # Little endian UTF-16 Unicode text
 echo "Hello, world!" > test_files/utf-16
@@ -52,8 +62,22 @@ iconv -f UTF-8 -t UTF-16 test_files/utf-16 > test_files/utf-16-unknown
 FILE_ENCODING="$( file --brief --mime-encoding test_files/utf-16-unknown )"
 iconv -f "$FILE_ENCODING" -t UTF-16LE test_files/utf-16-unknown > test_files/utf-16le.input
 
+echo "H@XX0rƵƵ!" > test_files/utf-16
+iconv -f UTF-8 -t UTF-16 test_files/utf-16 > test_files/utf-16-unknown
+FILE_ENCODING="$( file --brief --mime-encoding test_files/utf-16-unknown )"
+iconv -f "$FILE_ENCODING" -t UTF-16LE test_files/utf-16-unknown > test_files/utf1-16leb.input
+
+echo "12345678910" > test_files/utf-16
+iconv -f UTF-8 -t UTF-16 test_files/utf-16 > test_files/utf-16-unknown
+FILE_ENCODING="$( file --brief --mime-encoding test_files/utf-16-unknown )"
+iconv -f "$FILE_ENCODING" -t UTF-16LE test_files/utf-16-unknown > test_files/utf1-16lec.input
+
 # Big endian UTF-16 Unicode text
 iconv -f "$FILE_ENCODING" -t UTF-16BE test_files/utf-16-unknown > test_files/utf-16be.input
+
+iconv -f "$FILE_ENCODING" -t UTF-16BE test_files/utf-16-unknown > test_files/utf-16beb.input
+
+iconv -f "$FILE_ENCODING" -t UTF-16BE test_files/utf-16-unknown > test_files/utf-16bec.input
 
 echo "Running tests.."
 exitcode=0
