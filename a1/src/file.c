@@ -13,18 +13,7 @@ const char * const FILE_TYPE_STRINGS[] = {
     "Little-endian UTF-16 Unicode text",   //6
 };
 
-// Assumes: errnum is a valid error number
-int print_error(const char *path, unsigned long max_length, int errnum) {
-  return fprintf(stdout, "%s:%*scannot determine (%s)\n",
-    path, (int)(max_length - strlen(path)), " ", strerror(errnum));
-}
-
-int print_message(char *path, unsigned long max_length, int type_num) {
-  //return printf("%s: %s\n", path, FILE_TYPE_STRINGS[type_num]);
-  return fprintf(stdout, "%s:%*s%s\n",
-  path, (int)(max_length - strlen(path)), " ", FILE_TYPE_STRINGS[type_num]);
-}
-
+//Checks if the file is empty
 int empty_checker(FILE* fp) {
   fseek(fp, 0, 2);
   int size = ftell(fp);
@@ -34,7 +23,8 @@ int empty_checker(FILE* fp) {
     return 0;
 }
 
-
+//Checks if the file contains non-ascii characters, if none is found 
+//return 2 which mean the file is ASCII.
 int ascii_checker(FILE* fp) {
   int c;
   int result = 2; 
@@ -42,6 +32,7 @@ int ascii_checker(FILE* fp) {
   while (!feof(fp)) {
     c = fgetc(fp);
     if(c != EOF) {
+      //Limits exclude in range of (7 to 13, 27, 32 to 137 )
       if (!( (c >= 0x07 && c <= 0x0D) || c == 0x1B || 
         (c >= 0x20 && c <= 0x7E) )) {
         result = 0;
@@ -52,7 +43,8 @@ int ascii_checker(FILE* fp) {
   return result;
 }
 
-
+//Checks if the file contains non ISO-8859-1-likebytes, if none is found 
+//return 3 which mean the file is ISO.
 int iso_checker(FILE* fp) {
   int c;
   int result = 3; 
@@ -60,6 +52,7 @@ int iso_checker(FILE* fp) {
   while (!feof(fp)) {
     c = fgetc(fp);
     if(c != EOF) {
+      //Limits exclude in range of (7 to 13, 27, 32 to 126 ) and (160 to 255)
       if (!( (c >= 0x07 && c <= 0x0D) || c == 0x1B || 
         (c >= 0x20 && c <= 0x7E) || (c >= 0xA0 && c <= 0xFF) )) {  
         result = 0;
@@ -114,39 +107,40 @@ int utf16_checker(FILE* fp) {
   return result;
 }
 
-
-void type_detector(FILE* fp, char *path, unsigned long max_length) {
+//Returns the corresponding e_num.
+int type_detector(FILE* fp) {
   if (fp == NULL) {
-    print_error(path, max_length, errno);
+    return -1;
   }
   else if (empty_checker(fp) == 1) {
-    print_message(path, max_length, 1);
+    return 1;
   }
   else if (ascii_checker(fp) == 2) {
-    print_message(path, max_length, 2);
+    return 2;
   }
   else if (iso_checker(fp) == 3) {
-    print_message(path, max_length, 3);
+    return 3;
   }
   else if (utf16_checker(fp) ==5) {
-    print_message(path, max_length, 5);
+    return 5;
   }
   else if (utf16_checker(fp) == 6) {
-    print_message(path, max_length, 6);
+    return 6;
   }
   else if (utf8_checker(fp) == 4) {
-    print_message(path, max_length, 4);
-  }
+    return 4;
+  }    
   else
-    print_message(path, max_length, 0);
+    return 0;
 }
-
 
 int main(int argc, char *argv[]) {
   if (argc >= 2){
+    //Finding the file with the longest name, this is used for aligning the
+    //output.
     unsigned long max_length = strlen(argv[1]);
     int x;
-    for (x = 2; x <= argc; x++) {
+    for (x = 1; x < argc; x++) {
       if (max_length < strlen(argv[x-1])){
         max_length = strlen(argv[x-1]);
       }
@@ -156,11 +150,25 @@ int main(int argc, char *argv[]) {
     {
       FILE *fp;
       fp = fopen(argv[i],"r");
-      
-      type_detector(fp, argv[i], max_length);
-      
+
+      if (type_detector(fp) == -1)
+      {
+        //If no file has been found throw an error
+        fprintf(stdout, "%s:%*scannot determine(%s)\n", argv[i], (int)((max_length+1) - strlen(argv[i])), " ", strerror(errno));
+      }
+      else
+      {
+        //If the file has been found, the filetype will be printed out.
+        fprintf(stdout,"%s:%*s%s\n", argv[i], (int)((max_length+1) - strlen(argv[i]))," ", FILE_TYPE_STRINGS[type_detector(fp)]);  
+      }
       i++;
     }
     exit(EXIT_SUCCESS); 
   }
+  else
+  {
+    fprintf(stdout, "Usage: file path ...\n");
+    exit(EXIT_FAILURE);  
+  }
+
 }

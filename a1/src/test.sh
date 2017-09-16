@@ -61,7 +61,7 @@ f=test_files/*.input
 echo ">>> Testing ${f}.."
 file    ${f} | sed \
   -e 's/ASCII text.*/ASCII text/' \
-  -e 's/ data/data/' > test_files/expected \
+  -e 's/data/data/' > test_files/expected \
   -e 's/Big-endian.*/Big-endian UTF-16 Unicode text/' \
   -e 's/Little-endian.*/Little-endian UTF-16 Unicode text/'
 ./file  ${f} > test_files/actual
