@@ -2,10 +2,10 @@
 #include <stdlib.h> // exit, EXIT_FAILURE, EXIT_SUCCESS.
 #include <string.h> // strerror.
 #include <errno.h>  // errno.
-#define UTF8_2B(value) (((value & 0xc0) == 0xc0) ? 1 : 0) // 2-byte
-#define UTF8_3B(value) (((value & 0xe0) == 0xe0) ? 1 : 0) // 3-byte
-#define UTF8_4B(value) (((value & 0xf0) == 0xf0) ? 1 : 0) // 4-byte
-#define UTF8_CONT(value) (((value & 0x80) == 0x80) ? 1 : 0) // continuation byte
+#define UTF8_2B(value) (((value & 0xe0) == 0xc0) ? 1 : 0) // 2-byte
+#define UTF8_3B(value) (((value & 0xf0) == 0xe0) ? 1 : 0) // 3-byte
+#define UTF8_4B(value) (((value & 0xf8) == 0xf0) ? 1 : 0) // 4-byte
+#define UTF8_CONT(value) (((value & 0xc0) == 0x80) ? 1 : 0) // continuation byte
 
 const char * const FILE_TYPE_STRINGS[] = {
     "data",                                //0
@@ -173,12 +173,12 @@ int main(int argc, char *argv[]) {
       }
       i ++;
     }
-    exit(EXIT_SUCCESS); 
+    return EXIT_SUCCESS; 
   }
   else
   {
-    fprintf(stdout, "Usage: file path ...\n");
-    exit(EXIT_FAILURE);  
+    fprintf(stderr, "Usage: %s path\n", argv[0]);
+    return EXIT_FAILURE;
   }
 
 }
