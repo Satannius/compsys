@@ -19,7 +19,7 @@ const char * const FILE_TYPE_STRINGS[] = {
 
 //Checks if the file is empty
 int empty_checker(FILE* fp) {
-  fseek(fp, 0, 2);
+  fseek(fp, 0, SEEK_END);
   int size = ftell(fp);
   if (size == 0) 
     return 1;
@@ -170,6 +170,7 @@ int main(int argc, char *argv[]) {
         //If the file has been found, the filetype will be printed out.
         fprintf(stdout,"%s:%*s%s\n", argv[i], (int)((max_length+1) - strlen(argv[i])),
           " ", FILE_TYPE_STRINGS[type_detector(fp)]);  
+        fclose(fp);
       }
       i ++;
     }
