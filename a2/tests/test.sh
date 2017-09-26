@@ -14,11 +14,11 @@ cd ../tests
 # ../src/sim ./nop.out ./nop.trace
 # echo ""
 
-echo ">>> Testing movq_RtoR.."
-../architecture-tools/asm ./movq_RtoR.x64 ./movq_RtoR.out
-../architecture-tools/sim ./movq_RtoR.out movq_RtoR.trace
-../src/sim ./movq_RtoR.out ./movq_RtoR.trace
-echo ""
+# echo ">>> Testing movq_RtoR.."
+# ../architecture-tools/asm ./movq_RtoR.x64 ./movq_RtoR.out
+# ../architecture-tools/sim ./movq_RtoR.out movq_RtoR.trace
+# ../src/sim ./movq_RtoR.out ./movq_RtoR.trace
+# echo ""
 
 echo ">>> Testing movq_ItoR.."
 ../architecture-tools/asm ./movq_ItoR.x64 ./movq_ItoR.out
