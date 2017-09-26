@@ -76,7 +76,8 @@ int main(int argc, char* argv[]) {
 	// for them, but they are put here on purpose to make your task easier.
         val major_op = pick_bits(4,4, inst_word);
         val minor_op = pick_bits(0,4, inst_word);
-        bool is_move = is(MOV_RtoR, major_op);
+        bool is_move = (is(MOV_RtoR, major_op) 
+                        || is(MOV_ItoR, major_op));
         bool has_regs = is_move;
         val size = or( use_if(!has_regs, from_int(1)),
                        use_if(has_regs, from_int(2)));
@@ -118,6 +119,13 @@ int main(int argc, char* argv[]) {
         for (int j=0; j<size.val; ++j) {
           unsigned int byte = (inst_word.val >> (8*j)) & 0xff;
             printf("%x ", byte);
+            // printf("inst_word: %llx ", inst_word.val);
+            // printf(" size: %llu ", size.val);
+            printf(" reg_a: %llu ", reg_a.val);
+            printf(" reg_b: %llu ", reg_b.val);
+            printf(" imm: %llx ", sign_extended_imm.val);
+            printf(" op_a: %llu ", op_a.val);
+            printf(" op_b: %llu ", op_b.val);
         }
         if (reg_wr_enable)
             printf("\t\tr%ld = %lx\n", target_reg.val, datapath_result.val);
