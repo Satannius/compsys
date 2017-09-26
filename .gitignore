@@ -11,3 +11,5 @@
 **/test_files
 
 a2/src/sim
+
+*.trace
