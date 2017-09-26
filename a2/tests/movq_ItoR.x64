@@ -1,0 +1,7 @@
+
+    movq %r8,%r9
+    movq %r9,%r10
+    movq %r10,%r11
+    movq $5,%rax
+    nop
+    hlt
