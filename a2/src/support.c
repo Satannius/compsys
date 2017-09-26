@@ -52,6 +52,9 @@ void validate_magic(trace_reader_p tracer, int magic, int instruction_number,
     int match = 0;
     while (match < tracer->entries_valid) {
         Trace_Entry* entry = &tracer->entries[match];
+	if (entry->counter < instruction_number) {
+	    error("Trace validation error - missed write for earlier instruction");
+	}
         if (entry->type == magic && entry->destination == addr
             && entry->value == value && entry->counter == instruction_number) {
             // match! remove it from buffer
@@ -65,7 +68,7 @@ void validate_magic(trace_reader_p tracer, int magic, int instruction_number,
         ++match;
     }
     // we didn't match
-    error("Trace validation error");
+    error("Trace validation error - no matching write");
 }
 
 void validate_reg_wr(trace_reader_p tracer, int instruction_number, val addr, val value) {
