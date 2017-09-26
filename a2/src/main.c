@@ -78,9 +78,18 @@ int main(int argc, char* argv[]) {
         val minor_op = pick_bits(0,4, inst_word);
         bool is_move = (is(MOV_RtoR, major_op) 
                         || is(MOV_ItoR, major_op));
+        bool is_move_six = is(MOV_ItoR, major_op);
         bool has_regs = is_move;
-        val size = or( use_if(!has_regs, from_int(1)),
-                       use_if(has_regs, from_int(2)));
+        val size = from_int(0);
+        if (is_move_six)
+        {
+            size = use_if(has_regs, from_int(6));
+        }
+        else
+        {            
+            size = or( use_if(!has_regs, from_int(1)),
+                        use_if(has_regs, from_int(2)));
+        }
         val reg_a = pick_bits(12,4, inst_word);
         val reg_b = pick_bits(8,4, inst_word);
         val imm_bytes = or( use_if(!has_regs, pick_bits(8, 32, inst_word)),
@@ -99,7 +108,15 @@ int main(int argc, char* argv[]) {
         // select result for register update
 	// For A2 there'll be a lot more to choos from, once you've added use of
 	// the ALU and loading from memory to the code above.
-        val datapath_result = op_a;
+        val datapath_result = from_int(0);
+        if (is_move_six)
+        {
+            datapath_result = sign_extended_imm;
+        }
+        else
+        {
+            datapath_result = op_a;
+        }
 
         // pick result value and target register
 	// For A2 you'll likely have to extend this section as there will be two
@@ -119,13 +136,17 @@ int main(int argc, char* argv[]) {
         for (int j=0; j<size.val; ++j) {
           unsigned int byte = (inst_word.val >> (8*j)) & 0xff;
             printf("%x ", byte);
+            // unsigned int byteb = (inst_word.val >> (8*j));
+            // printf("%x ", byteb);
+            // printf("major_op: %llx ", major_op.val);
+            // printf("minor_op: %llx ", minor_op.val);
             // printf("inst_word: %llx ", inst_word.val);
             // printf(" size: %llu ", size.val);
-            printf(" reg_a: %llu ", reg_a.val);
-            printf(" reg_b: %llu ", reg_b.val);
-            printf(" imm: %llx ", sign_extended_imm.val);
-            printf(" op_a: %llu ", op_a.val);
-            printf(" op_b: %llu ", op_b.val);
+            // printf(" reg_a: %llu ", reg_a.val);
+            // printf(" reg_b: %llu ", reg_b.val);
+            // printf(" imm: %llx ", sign_extended_imm.val);
+            // printf(" op_a: %llu ", op_a.val);
+            // printf(" op_b: %llu ", op_b.val);
         }
         if (reg_wr_enable)
             printf("\t\tr%ld = %lx\n", target_reg.val, datapath_result.val);
