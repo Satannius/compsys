@@ -86,8 +86,8 @@ int main(int argc, char* argv[]) {
         bool is_ari = (is(ARITHMETIC, major_op));
         bool is_jcc = (is(JCC, major_op));
 
-        bool has_regs = (is_move || is_move_imm || is_ari || is_jcc);
-        bool has_mem  = is_move_imm;
+        bool has_regs = (is_move_rr || is_move_ir || is_ari || is_jcc);
+        bool has_mem  = is_move_ir;
         bool has_cmp  = (is(ARITHMETIC, major_op) && is(4, minor_op));
 
         val size = or( use_if(!has_regs, from_int(1)), 
@@ -116,10 +116,10 @@ int main(int argc, char* argv[]) {
     alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));
     bool jcc_res = (eval_condition(cc, minor_op));
 
-    val datapath_mov = or( use_if(is_move, op_a), use_if(is_move_imm,sign_extended_imm));
+    val datapath_mov = or( use_if(is_move_rr, op_a), use_if(is_move_ir,sign_extended_imm));
     val datapath_ari = ari_res.result;
     
-    val datapath_result = or( use_if((is_move || is_move_imm), datapath_mov),
+    val datapath_result = or( use_if((is_move_rr || is_move_ir), datapath_mov),
                               use_if(is_ari, datapath_ari) );
  
 
@@ -127,7 +127,8 @@ int main(int argc, char* argv[]) {
     // For A2 you'll likely have to extend this section as there will be two
     // register updates for some instructions.
         val target_reg = reg_b;
-        bool reg_wr_enable = (is_move || is_move_imm || (is_ari && !(has_cmp))|| is_jcc); 
+        val target_mem = or(use_if(!has_mem,from_int(0)),use_if(has_mem,add(imm, op_b)));
+        bool reg_wr_enable = (is_move_rr || is_move_ir || (is_ari && !(has_cmp))|| is_jcc); 
         bool mem_wr_enable = ( (is(MOV_RtoM, major_op)) || is_jcc);
 
         // determine PC for next cycle. Right now we can only execute next in sequence.
@@ -160,7 +161,7 @@ int main(int argc, char* argv[]) {
         if (reg_wr_enable) {
             printf("\t\tr%llu = %llx\n", target_reg.val, datapath_result.val);
         } else if (mem_wr_enable) {
-            printf("\t\t[%ld] = %lx\n", target_mem.val, datapath_result.val);
+            printf("\t\t[%lld] = %llx\n", target_mem.val, datapath_result.val);
         } else {
             printf("\n");
         }
