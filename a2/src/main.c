@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
         bool is_ari = (is(ARITHMETIC, major_op));
         bool is_ari_c = (is(ARITHMETIC, major_op) && is(4, minor_op));
         
-        bool has_regs = (is_move_rr || is_move_imm || is_ari) ;
+        bool has_regs = (is_move_rr || is_move_ir || is_ari) ;
         bool has_imm = (is_move_ir || is_move_rm || is_move_mr);
         bool has_mem = (is_move_rm || is_move_mr);
 
@@ -123,27 +123,25 @@ int main(int argc, char* argv[]) {
 	// the ALU and loading from memory to the code above.
     alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));          
 
-    val datapath_mov = or( use_if(is_move, op_a), use_if(is_move_imm,sign_extended_imm));
+    val datapath_mov = or( use_if(is_move_rr, op_a), use_if(is_move_ir,sign_extended_imm));
     val datapath_ari = ari_res.result;  
     
     //or(use_if(is_ari_add, (add(op_b, op_a))),use_if(is_ari_sub, (add(op_b, op_a))) );
     
-    val datapath_result = or( use_if((is_move_rr || is_move_imm), datapath_mov), use_if(is_ari, datapath_ari) );
+    val datapath_result = or( use_if((is_move_rr || is_move_ir), datapath_mov), use_if(is_ari, datapath_ari) );
  
 
     // pick result value and target register
 	// For A2 you'll likely have to extend this section as there will be two
 	// register updates for some instructions.
         val target_reg = reg_b;
-        bool reg_wr_enable = (is_move_rr || is_move_imm || is_ari && !(is_ari_c)); // SPØRG
-        bool mem_wr_enable = is(MOV_RtoM, major_op);
+        bool reg_wr_enable = (is_move_rr || is_move_ir || (is_ari && !(is_ari_c))); // SPØRG
+        bool mem_wr_enable = is_move_rm;
 
         // Compute memory addresses
         val target_mem_a = add(imm, op_a);
-        val target_mem = or(use_if(!has_mem,from_int(0)),use_if(has_mem,add(imm, op_b))); //////////////////////////////////////////////////////////////////
+        val target_mem = or(use_if(!has_mem,from_int(0)),use_if(has_mem,add(imm, op_b)));
         
-        bool reg_wr_enable = (is_move_rr || is_move_ir); // SPØRG
-        bool mem_wr_enable = is_move_rm;
         
         // determine PC for next cycle. Right now we can only execute next in sequence.
         // For A2 you'll have to pick the right value for branches, call and return as
@@ -189,14 +187,9 @@ int main(int argc, char* argv[]) {
             validate_pc_wr(tracer, instruction_number, next_pc);
             if (reg_wr_enable)
                 validate_reg_wr(tracer, instruction_number, target_reg, datapath_result);
-<<<<<<< Updated upstream
-        
-         // For A2 you'll need to add validation for the other register written
-=======
             if (mem_wr_enable)
                 validate_mem_wr(tracer, instruction_number, target_mem, datapath_result);
 	    // For A2 you'll need to add validation for the other register written
->>>>>>> Stashed changes
 	    // (for instructions which do write the other register)
 	    // AND you'll need to add a call to validate memory writes to check
 	    // movq %rX,D(%rY) once that is implemented. You can use validate_mem_wr
