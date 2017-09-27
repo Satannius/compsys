@@ -26,8 +26,14 @@ cd ../tests
 # ../src/sim ./movq_ItoR.out ./movq_ItoR.trace
 # echo ""
 
-echo ">>> Testing movq_RtoM.."
-../architecture-tools/asm ./movq_RtoM.x64 ./movq_RtoM.out
-../architecture-tools/sim ./movq_RtoM.out movq_RtoM.trace
-# ../src/sim ./movq_RtoM.out ./movq_RtoM.trace
+# echo ">>> Testing movq_RtoM1.."
+# ../architecture-tools/asm ./movq_RtoM1.x64 ./movq_RtoM1.out
+# ../architecture-tools/sim ./movq_RtoM1.out movq_RtoM1.trace
+# ../src/sim ./movq_RtoM1.out ./movq_RtoM1.trace
+# echo ""
+
+echo ">>> Testing movq_RtoM2.."
+../architecture-tools/asm ./movq_RtoM2.x64 ./movq_RtoM2.out
+../architecture-tools/sim ./movq_RtoM2.out movq_RtoM2.trace
+../src/sim ./movq_RtoM2.out ./movq_RtoM2.trace
 echo ""

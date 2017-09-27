@@ -75,23 +75,18 @@ int main(int argc, char* argv[]) {
 	// use them to finish A2. Since they are unused, gcc will generate warnings
 	// for them, but they are put here on purpose to make your task easier.
         val major_op = pick_bits(4,4, inst_word);
-        val minor_op = pick_bits(0,4, inst_word);
+        val minor_op = pick_bits(0,4, inst_word); // SPØRG
         bool is_move = (is(MOV_RtoR, major_op));
-        bool is_move_six = (is(MOV_ItoR, major_op)
+        bool is_move_imm = (is(MOV_ItoR, major_op)
                             || is(MOV_MtoR, major_op)
-                            || is(MOV_RtoM, major_op));
+                            || is(MOV_RtoM, major_op)); // SPØRG
         
-        bool has_regs = (is_move || is_move_six);
-        val size = from_int(0);
-        if (is_move_six)
-        {
-            size = use_if(has_regs, from_int(6));
-        }
-        else
-        {            
-            size = or( use_if(!has_regs, from_int(1)),
-                        use_if(has_regs, from_int(2)));
-        }
+        bool has_regs = (is_move || is_move_imm);
+        bool has_mem = is_move_imm;
+        val size = or(
+            or(use_if(!has_regs, from_int(1)), use_if(has_regs, from_int(2))),
+             use_if(has_mem,from_int(6)));
+        
         val reg_a = pick_bits(12,4, inst_word);
         val reg_b = pick_bits(8,4, inst_word);
         val imm_bytes = or( use_if(!has_regs, pick_bits(8, 32, inst_word)),
@@ -110,21 +105,15 @@ int main(int argc, char* argv[]) {
         // select result for register update
 	// For A2 there'll be a lot more to choos from, once you've added use of
 	// the ALU and loading from memory to the code above.
-        val datapath_result = from_int(0);
-        if (is_move_six)
-        {
-            datapath_result = sign_extended_imm;
-        }
-        else
-        {
-            datapath_result = op_a;
-        }
+        val datapath_result = or( use_if(!is_move_imm, op_a),
+                                  use_if(is_move_imm,sign_extended_imm));
 
         // pick result value and target register
 	// For A2 you'll likely have to extend this section as there will be two
 	// register updates for some instructions.
         val target_reg = reg_b;
-        bool reg_wr_enable = is_move;
+        bool reg_wr_enable = (is_move || is_move_imm); // SPØRG
+        bool mem_wr_enable = is(MOV_RtoM, major_op);
 
         // determine PC for next cycle. Right now we can only execute next in sequence.
 	// For A2 you'll have to pick the right value for branches, call and return as
@@ -134,26 +123,27 @@ int main(int argc, char* argv[]) {
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
 	// For A2, feel free to add more information you'd like for your own debugging
-        printf("%lx : ", pc.val);
+    printf("%lx : ", pc.val);
+    // printf("inst_word: %llx ", inst_word.val);
+    // printf("major_op: %llx ", major_op.val);
+    // printf("minor_op: %llx ", minor_op.val);
+    // printf(" size: %llu ", size.val);
+    printf(" reg_a: %llu ", reg_a.val);
+    // printf(" reg_b: %llu ", reg_b.val);
+    // printf(" imm: %llx ", sign_extended_imm.val);
+    // printf(" op_a: %llu ", op_a.val);
+    // printf(" op_b: %llu ", op_b.val);
         for (int j=0; j<size.val; ++j) {
           unsigned int byte = (inst_word.val >> (8*j)) & 0xff;
             printf("%x ", byte);
-            // unsigned int byteb = (inst_word.val >> (8*j));
-            // printf("%x ", byteb);
-            // printf("major_op: %llx ", major_op.val);
-            // printf("minor_op: %llx ", minor_op.val);
-            // printf("inst_word: %llx ", inst_word.val);
-            // printf(" size: %llu ", size.val);
-            // printf(" reg_a: %llu ", reg_a.val);
-            // printf(" reg_b: %llu ", reg_b.val);
-            // printf(" imm: %llx ", sign_extended_imm.val);
-            // printf(" op_a: %llu ", op_a.val);
-            // printf(" op_b: %llu ", op_b.val);
         }
-        if (reg_wr_enable)
+        if (reg_wr_enable) {
             printf("\t\tr%ld = %lx\n", target_reg.val, datapath_result.val);
-        else
+        } else if (mem_wr_enable) {
+            printf("\t\tr%ld = %lx\n", target_reg.val, datapath_result.val);
+        } else {
             printf("\n");
+        }
 
         if ((tracer != NULL) & !stop) {
             // Validate values written to registers and memory against trace from
