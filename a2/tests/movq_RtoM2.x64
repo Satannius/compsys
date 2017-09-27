@@ -1,0 +1,4 @@
+
+    movq $5,%rcx
+    movq %rbx,11(%rcx)
+    hlt
