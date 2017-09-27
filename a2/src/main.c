@@ -77,11 +77,13 @@ int main(int argc, char* argv[]) {
         val major_op = pick_bits(4,4, inst_word);
         val minor_op = pick_bits(0,4, inst_word); // SPØRG
         bool is_move = (is(MOV_RtoR, major_op));
-        bool is_move_imm = (is(MOV_ItoR, major_op)
-                            || is(MOV_MtoR, major_op)
-                            || is(MOV_RtoM, major_op)); // SPØRG
-        
-        bool has_regs = (is_move || is_move_imm);
+        bool is_move_imm = (is(MOV_ItoR, major_op)||
+                            is(MOV_MtoR, major_op)|| 
+                            is(MOV_RtoM, major_op)); // SPØRG
+
+        bool is_ari = (is(ARITHMETIC, major_op));
+
+        bool has_regs = (is_move || is_move_imm || is_ari);
         bool has_mem = is_move_imm;
         val size = or(
             or(use_if(!has_regs, from_int(1)), use_if(has_regs, from_int(2))),
@@ -96,23 +98,30 @@ int main(int argc, char* argv[]) {
         val next_inst_pc = add(pc, size);
         stop = is(HLT, major_op);
 
-        // execute - for now, this is just reading out operands from their registers
+    // execute - for now, this is just reading out operands from their registers
 	// For A2 you'll need to add components that implement the more complex
 	// instructions. It's the place to use the ALU and read from memory.
         val op_a = memory_read(regs, 0, reg_a, true);
         val op_b = memory_read(regs, 1, reg_b, true);
 
-        // select result for register update
-	// For A2 there'll be a lot more to choos from, once you've added use of
+    // select result for register update
+	// For A2 there'll be a lot more to choose from, once you've added use of
 	// the ALU and loading from memory to the code above.
-        val datapath_result = or( use_if(!is_move_imm, op_a),
-                                  use_if(is_move_imm,sign_extended_imm));
+    alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));          
 
-        // pick result value and target register
+    val datapath_mov = or( use_if(is_move, op_a), use_if(is_move_imm,sign_extended_imm));
+    val datapath_ari = ari_res.result;  
+    
+    //or(use_if(is_ari_add, (add(op_b, op_a))),use_if(is_ari_sub, (add(op_b, op_a))) );
+    
+    val datapath_result = or( use_if((is_move || is_move_imm), datapath_mov), use_if(is_ari, datapath_ari));
+ 
+
+    // pick result value and target register
 	// For A2 you'll likely have to extend this section as there will be two
 	// register updates for some instructions.
         val target_reg = reg_b;
-        bool reg_wr_enable = (is_move || is_move_imm); // SPØRG
+        bool reg_wr_enable = (is_move || is_move_imm || is_ari); // SPØRG
         bool mem_wr_enable = is(MOV_RtoM, major_op);
 
         // determine PC for next cycle. Right now we can only execute next in sequence.
@@ -154,7 +163,8 @@ int main(int argc, char* argv[]) {
             validate_pc_wr(tracer, instruction_number, next_pc);
             if (reg_wr_enable)
                 validate_reg_wr(tracer, instruction_number, target_reg, datapath_result);
-	    // For A2 you'll need to add validation for the other register written
+        
+         // For A2 you'll need to add validation for the other register written
 	    // (for instructions which do write the other register)
 	    // AND you'll need to add a call to validate memory writes to check
 	    // movq %rX,D(%rY) once that is implemented. You can use validate_mem_wr
