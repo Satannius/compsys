@@ -14,4 +14,4 @@ a2/src/sim
 
 *.trace
 
-a2/architecture-tools/asm
+a2/architecture-tools/
