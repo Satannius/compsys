@@ -61,111 +61,91 @@ int main(int argc, char* argv[]) {
 
     while (!stop) { // for each cycle:
 
-        ++instruction_number;
+        ++ instruction_number;
 
         // fetch next instruction
         val inst_word = memory_read_unaligned(mem, 0, 1, pc, true);
 
         // decode - here we pick apart the instruction in major and minor opcode,
-	// register specifiers and any immediate value. Next we identify all the
-	// instructions and generate control signals:
-	// For A2 you'll need to add generation of more control signals to control
-	// the rest of the machine.
-	// Some of the signals below are not used initially, but you'll have to
-	// use them to finish A2. Since they are unused, gcc will generate warnings
-	// for them, but they are put here on purpose to make your task easier.
-        val major_op = pick_bits(4,4, inst_word);   // 0xAb, first op
-        val minor_op = pick_bits(0,4, inst_word);   // 0xaB, second op
-
-        // Set movq signals.
-        bool is_move_rr = (is(MOV_RtoR, major_op));
-        bool is_move_ir = is(MOV_ItoR, major_op);
-        bool is_move_rm = is(MOV_RtoM, major_op);
-        bool is_move_mr = is(MOV_MtoR, major_op);
+    // register specifiers and any immediate value. Next we identify all the
+    // instructions and generate control signals:
+    // For A2 you'll need to add generation of more control signals to control
+    // the rest of the machine.
+    // Some of the signals below are not used initially, but you'll have to
+    // use them to finish A2. Since they are unused, gcc will generate warnings
+    // for them, but they are put here on purpose to make your task easier.
+        val major_op = pick_bits(4,4, inst_word);
+        val minor_op = pick_bits(0,4, inst_word); 
+        bool is_move = (is(MOV_RtoR, major_op));
+        bool is_move_imm = (is(MOV_ItoR, major_op)||
+                            is(MOV_MtoR, major_op)|| 
+                            is(MOV_RtoM, major_op)); 
 
         bool is_ari = (is(ARITHMETIC, major_op));
-        bool is_ari_c = (is(ARITHMETIC, major_op) && is(4, minor_op));
-        
-        bool has_regs = (is_move_rr || is_move_ir || is_ari) ;
-        bool has_imm = (is_move_ir || is_move_rm || is_move_mr);
-        bool has_mem = (is_move_rm || is_move_mr);
+        bool is_jcc = (is(JCC, major_op));
 
-        // set size to be read depending on has_regs / has_imm
-        val size = or(or(use_if(!has_regs, from_int(1)),
-                        use_if(has_regs, from_int(2))),
-                        use_if(has_imm,from_int(6)));
+        bool has_regs = (is_move || is_move_imm || is_ari || is_jcc);
+        bool has_mem  = is_move_imm;
+        bool has_cmp  = (is(ARITHMETIC, major_op) && is(4, minor_op));
+
+        val size = or( use_if(!has_regs, from_int(1)), 
+                   or( use_if( has_regs, from_int(2)),
+                   or( use_if( is_jcc, from_int(5)),
+                       use_if( has_mem,from_int(6)) )));
         
         val reg_a = pick_bits(12,4, inst_word);
         val reg_b = pick_bits(8,4, inst_word);
-
-        // Process immediate
-        val imm_bytes = or( use_if(!has_imm, pick_bits(8, 32, inst_word)),
-                            use_if(has_imm, pick_bits(16, 32, inst_word)));
+        val imm_bytes = or( use_if(!has_regs, pick_bits(8, 32, inst_word)),
+                            use_if( has_regs, pick_bits(16, 32, inst_word)));
         val imm = imm_bytes;
         val sign_extended_imm = sign_extend(31,imm);
-
-        // Set next instruction.
         val next_inst_pc = add(pc, size);
-        
-        // If hlt encoding is detected, set stop to true.
         stop = is(HLT, major_op);
 
     // execute - for now, this is just reading out operands from their registers
-	// For A2 you'll need to add components that implement the more complex
+    // For A2 you'll need to add components that implement the more complex
     // instructions. It's the place to use the ALU and read from memory.
-        
-    // Read from registers
         val op_a = memory_read(regs, 0, reg_a, true);
         val op_b = memory_read(regs, 1, reg_b, true);
 
     // select result for register update
-	// For A2 there'll be a lot more to choose from, once you've added use of
-	// the ALU and loading from memory to the code above.
-    alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));          
+    // For A2 there'll be a lot more to choose from, once you've added use of
+    // the ALU and loading from memory to the code above.
+    alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));
+    bool jcc_res = (eval_condition(cc, minor_op));
 
-    val datapath_mov = or( use_if(is_move_rr, op_a), use_if(is_move_ir,sign_extended_imm));
-    val datapath_ari = ari_res.result;  
+    val datapath_mov = or( use_if(is_move, op_a), use_if(is_move_imm,sign_extended_imm));
+    val datapath_ari = ari_res.result;
     
-    //or(use_if(is_ari_add, (add(op_b, op_a))),use_if(is_ari_sub, (add(op_b, op_a))) );
-    
-    val datapath_result = or( use_if((is_move_rr || is_move_ir), datapath_mov), use_if(is_ari, datapath_ari) );
+    val datapath_result = or( use_if((is_move || is_move_imm), datapath_mov),
+                              use_if(is_ari, datapath_ari) );
  
 
     // pick result value and target register
-	// For A2 you'll likely have to extend this section as there will be two
-	// register updates for some instructions.
+    // For A2 you'll likely have to extend this section as there will be two
+    // register updates for some instructions.
         val target_reg = reg_b;
-        bool reg_wr_enable = (is_move_rr || is_move_ir || (is_ari && !(is_ari_c))); // SPØRG
-        bool mem_wr_enable = is_move_rm;
+        bool reg_wr_enable = (is_move || is_move_imm || (is_ari && !(has_cmp))|| is_jcc); 
+        bool mem_wr_enable = ( (is(MOV_RtoM, major_op)) || is_jcc);
 
-        // Compute memory addresses
-        val target_mem_a = add(imm, op_a);
-        val target_mem = or(use_if(!has_mem,from_int(0)),use_if(has_mem,add(imm, op_b)));
-        
-        
         // determine PC for next cycle. Right now we can only execute next in sequence.
-        // For A2 you'll have to pick the right value for branches, call and return as
-        // well.
+    // For A2 you'll have to pick the right value for branches, call and return as
+    // well.
         val next_pc = next_inst_pc;
-        
+
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
-        // For A2, feel free to add more information you'd like for your own debugging
-        printf("%lx : ", pc.val);
-        // printf(" reg_wr_enable %d ", reg_wr_enable);
-        // printf(" mem_wr_enable %d ", mem_wr_enable);
-        // printf(" imm: %llx ", imm.val);
-        // printf(" sign_extended_imm: %llx ", sign_extended_imm.val);
-        // printf(" target_mem: %llx ", target_mem.val);
-        // printf(" inst_word: %llx ", inst_word.val);
-        // printf(" major_op: %llx ", major_op.val);
-        // printf(" minor_op: %llx ", minor_op.val);
-        // printf(" size: %llu ", size.val);
-        // printf(" reg_a: %llu ", reg_a.val);
-        // printf(" reg_b: %llu ", reg_b.val);
-        // printf(" op_a: %llu ", op_a.val);
-        // printf(" op_b: %llu ", op_b.val);
-        // printf(" datapath_result: %llx ", datapath_result);
+    // For A2, feel free to add more information you'd like for your own debugging
+    printf("%lx : ", pc.val);
+    // printf("inst_word: %llx ", inst_word.val);
+    // printf("major_op: %llx ", major_op.val);
+    // printf("minor_op: %llx ", minor_op.val);
+    // printf(" size: %llu ", size.val);
+     printf(" reg_a: %llu ", reg_a.val);
+    // printf(" reg_b: %llu ", reg_b.val);
+     printf(" imm: %llx ", sign_extended_imm.val);
+    // printf(" op_a: %llu ", op_a.val);
+    // printf(" op_b: %llu ", op_b.val);
         for (int j=0; j<size.val; ++j) {
           unsigned int byte = (inst_word.val >> (8*j)) & 0xff;
             printf("%x ", byte);
@@ -173,7 +153,7 @@ int main(int argc, char* argv[]) {
         if (reg_wr_enable) {
             printf("\t\tr%ld = %lx\n", target_reg.val, datapath_result.val);
         } else if (mem_wr_enable) {
-            printf("\t\t\[%ld\] = %lx\n", target_mem.val, datapath_result.val);
+            printf("\t\tr%ld = %lx\n", target_reg.val, datapath_result.val);
         } else {
             printf("\n");
         }
@@ -187,23 +167,20 @@ int main(int argc, char* argv[]) {
             validate_pc_wr(tracer, instruction_number, next_pc);
             if (reg_wr_enable)
                 validate_reg_wr(tracer, instruction_number, target_reg, datapath_result);
-            if (mem_wr_enable)
-                validate_mem_wr(tracer, instruction_number, target_mem, datapath_result);
-	    // For A2 you'll need to add validation for the other register written
-	    // (for instructions which do write the other register)
-	    // AND you'll need to add a call to validate memory writes to check
-	    // movq %rX,D(%rY) once that is implemented. You can use validate_mem_wr
-	    // found in "support.h"
+        
+         // For A2 you'll need to add validation for the other register written
+        // (for instructions which do write the other register)
+        // AND you'll need to add a call to validate memory writes to check
+        // movq %rX,D(%rY) once that is implemented. You can use validate_mem_wr
+        // found in "support.h"
         }
 
         // store results at end of cycle
-	// For A2 you need to add updating the condition code register and you'll
-	// need to write to an additional register for some instructions and implement
-	// writing to memory.
+    // For A2 you need to add updating the condition code register and you'll
+    // need to write to an additional register for some instructions and implement
+    // writing to memory.
         pc = next_pc;
         memory_write(regs, 1, target_reg, datapath_result, reg_wr_enable);
-        memory_write(mem, 1, target_mem, datapath_result, mem_wr_enable);
-        
     }
     printf("Done\n");
 }
