@@ -87,32 +87,42 @@ int main(int argc, char* argv[]) {
         bool is_jcc = (is(JCC, major_op));
 
         bool has_regs = (is_move_rr || is_move_ir || is_ari || is_jcc);
-        bool has_mem  = is_move_ir;
+        bool has_mem = (is_move_ir || is_move_rm || is_move_mr);
         bool has_cmp  = (is(ARITHMETIC, major_op) && is(4, minor_op));
 
         val size = or( use_if(!has_regs, from_int(1)), 
                    or( use_if( has_regs, from_int(2)),
                    or( use_if( is_jcc, from_int(5)),
                        use_if( has_mem,from_int(6)) )));
-        
+
         val reg_a = pick_bits(12,4, inst_word);
         val reg_b = pick_bits(8,4, inst_word);
-        val imm_bytes = or( use_if(!has_regs, pick_bits(8, 32, inst_word)),
-                            use_if( has_regs, pick_bits(16, 32, inst_word)));
+
+        // Process immediate
+        val imm_bytes = or( use_if(!has_mem, pick_bits(8, 32, inst_word)),
+                            use_if( has_mem, pick_bits(16, 32, inst_word)));
         val imm = imm_bytes;
         val sign_extended_imm = sign_extend(31,imm);
+
+        // Set next instruction
         val next_inst_pc = add(pc, size);
+
+        // If hlt encoding is detected, set stop to true. 
         stop = is(HLT, major_op);
 
     // execute - for now, this is just reading out operands from their registers
     // For A2 you'll need to add components that implement the more complex
     // instructions. It's the place to use the ALU and read from memory.
+        
+    // Read values in registers
         val op_a = memory_read(regs, 0, reg_a, true);
         val op_b = memory_read(regs, 1, reg_b, true);
 
     // select result for register update
     // For A2 there'll be a lot more to choose from, once you've added use of
     // the ALU and loading from memory to the code above.
+
+    // Arithmetic operations
     alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));
     bool jcc_res = (eval_condition(cc, minor_op));
 
@@ -128,6 +138,7 @@ int main(int argc, char* argv[]) {
     // register updates for some instructions.
         val target_reg = reg_b;
         val target_mem = or(use_if(!has_mem,from_int(0)),use_if(has_mem,add(imm, op_b)));
+
         bool reg_wr_enable = (is_move_rr || is_move_ir || (is_ari && !(has_cmp))|| is_jcc); 
         bool mem_wr_enable = ( (is(MOV_RtoM, major_op)) || is_jcc);
 
@@ -175,7 +186,8 @@ int main(int argc, char* argv[]) {
             validate_pc_wr(tracer, instruction_number, next_pc);
             if (reg_wr_enable)
                 validate_reg_wr(tracer, instruction_number, target_reg, datapath_result);
-        
+            if (mem_wr_enable)
+                validate_mem_wr(tracer, instruction_number, target_mem, datapath_result);
          // For A2 you'll need to add validation for the other register written
         // (for instructions which do write the other register)
         // AND you'll need to add a call to validate memory writes to check
@@ -189,6 +201,8 @@ int main(int argc, char* argv[]) {
     // writing to memory.
         pc = next_pc;
         memory_write(regs, 1, target_reg, datapath_result, reg_wr_enable);
+        memory_write(mem, 1, target_mem, datapath_result, mem_wr_enable); 
+        
     }
     printf("Done\n");
 }
