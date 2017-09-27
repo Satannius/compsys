@@ -1,0 +1,6 @@
+    movq $6, %rax
+    movq $5, %rbx
+    cmpq %rbx, %rax
+    movq $1, %rdx
+    hlt
+  

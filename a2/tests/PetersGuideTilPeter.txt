@@ -1,0 +1,3 @@
+Peter guide til at fixe mit eget lort:
+1. Make i asm
+2. Ændre alting til lf 

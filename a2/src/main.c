@@ -82,8 +82,9 @@ int main(int argc, char* argv[]) {
                             is(MOV_RtoM, major_op)); // SPØRG
 
         bool is_ari = (is(ARITHMETIC, major_op));
+        bool is_ari_c = (is(ARITHMETIC, major_op) && is(4, minor_op));
 
-        bool has_regs = (is_move || is_move_imm || is_ari);
+        bool has_regs = (is_move || is_move_imm || is_ari) ;
         bool has_mem = is_move_imm;
         val size = or(
             or(use_if(!has_regs, from_int(1)), use_if(has_regs, from_int(2))),
@@ -114,14 +115,14 @@ int main(int argc, char* argv[]) {
     
     //or(use_if(is_ari_add, (add(op_b, op_a))),use_if(is_ari_sub, (add(op_b, op_a))) );
     
-    val datapath_result = or( use_if((is_move || is_move_imm), datapath_mov), use_if(is_ari, datapath_ari));
+    val datapath_result = or( use_if((is_move || is_move_imm), datapath_mov), use_if(is_ari, datapath_ari) );
  
 
     // pick result value and target register
 	// For A2 you'll likely have to extend this section as there will be two
 	// register updates for some instructions.
         val target_reg = reg_b;
-        bool reg_wr_enable = (is_move || is_move_imm || is_ari); // SPØRG
+        bool reg_wr_enable = (is_move || is_move_imm || is_ari && !(is_ari_c)); // SPØRG
         bool mem_wr_enable = is(MOV_RtoM, major_op);
 
         // determine PC for next cycle. Right now we can only execute next in sequence.
