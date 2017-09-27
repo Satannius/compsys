@@ -1,0 +1,4 @@
+    movq $7, %rax
+    movq $5, %rbx
+    subq %rbx, %rax
+  

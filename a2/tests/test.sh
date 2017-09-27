@@ -2,11 +2,11 @@ cd ../src
 make
 cd ../tests
 
-echo ">>> Testing hlt.."
-../architecture-tools/asm ./hlt.x64 ./hlt.out
-../architecture-tools/sim ./hlt.out
-../src/sim ./hlt.out ./hlt.trace
-echo ""
+#echo ">>> Testing hlt.."
+#../architecture-tools/asm ./hlt.x64 ./hlt.out
+#../architecture-tools/sim ./hlt.out ./hlt.trace
+#../src/sim ./hlt.out ./hlt.trace
+#echo ""
 
 # echo ">>> Testing nop.."
 # ../architecture-tools/asm ./nop.x64 ./nop.out
@@ -38,8 +38,8 @@ echo ""
 # ../src/sim ./movq_RtoM2.out ./movq_RtoM2.trace
 # echo ""
 
-# echo ">>> Testing movq_Ptest.."
-# ../architecture-tools/asm ./Ptest.x64 ./Ptest.out
-# ../architecture-tools/sim ./Ptest.out Ptest.trace
-# ../src/sim ./Ptest.out ./Ptest.trace
-# echo ""
+ echo ">>> Testing movq_Ptest.."
+ ../architecture-tools/asm ./Ptest.x64 ./Ptest.out
+ ../architecture-tools/sim ./Ptest.out ./Ptest.trace
+ ../src/sim ./Ptest.out ./Ptest.trace
+ echo ""
