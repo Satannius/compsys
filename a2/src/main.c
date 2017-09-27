@@ -78,7 +78,7 @@ int main(int argc, char* argv[]) {
         val minor_op = pick_bits(0,4, inst_word);   // 0xaB, second op
 
         // Set movq signals.
-        bool is_move_rr = (is(MOV_RtoR, major_op));
+        bool is_move_rr = is(MOV_RtoR, major_op);
         bool is_move_ir = is(MOV_ItoR, major_op);
         bool is_move_rm = is(MOV_RtoM, major_op);
         bool is_move_mr = is(MOV_MtoR, major_op);
@@ -151,7 +151,7 @@ int main(int argc, char* argv[]) {
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
         // For A2, feel free to add more information you'd like for your own debugging
-        printf("%lx : ", pc.val);
+        printf("%llx : ", pc.val);
         // printf(" reg_wr_enable %d ", reg_wr_enable);
         // printf(" mem_wr_enable %d ", mem_wr_enable);
         // printf(" imm: %llx ", imm.val);
@@ -171,9 +171,9 @@ int main(int argc, char* argv[]) {
             printf("%x ", byte);
         }
         if (reg_wr_enable) {
-            printf("\t\tr%ld = %lx\n", target_reg.val, datapath_result.val);
+            printf("\t\tr%llu = %llx\n", target_reg.val, datapath_result.val);
         } else if (mem_wr_enable) {
-            printf("\t\t\[%ld\] = %lx\n", target_mem.val, datapath_result.val);
+            printf("\t\t[%ld] = %lx\n", target_mem.val, datapath_result.val);
         } else {
             printf("\n");
         }
