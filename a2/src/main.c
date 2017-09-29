@@ -90,11 +90,11 @@ int main(int argc, char* argv[]) {
         bool has_mem = (is_move_ir || is_move_rm || is_move_mr);
         bool has_cmp  = (is(ARITHMETIC, major_op) && is(4, minor_op));
 
-        val size = or( use_if(!has_regs, from_int(1)), 
+        val size = or( use_if((!has_regs && !has_mem), from_int(1)), 
                    or( use_if( has_regs, from_int(2)),
                    or( use_if( is_jcc, from_int(5)),
                        use_if( has_mem,from_int(6)) )));
-
+        
         val reg_a = pick_bits(12,4, inst_word);
         val reg_b = pick_bits(8,4, inst_word);
 
@@ -126,10 +126,11 @@ int main(int argc, char* argv[]) {
     alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));
     bool jcc_res = (eval_condition(cc, minor_op));
 
-    val datapath_mov = or( use_if(is_move_rr, op_a), use_if(is_move_ir,sign_extended_imm));
+    // val datapath_mov = or( use_if(is_move_rr, op_a),use_if(is_move_ir,sign_extended_imm));
+    val datapath_mov = or(use_if((is_move_rr || is_move_rm), op_a), use_if(is_move_ir,sign_extended_imm));
     val datapath_ari = ari_res.result;
     
-    val datapath_result = or( use_if((is_move_rr || is_move_ir), datapath_mov),
+    val datapath_result = or( use_if((is_move_rr || is_move_ir || is_move_rm), datapath_mov),
                               use_if(is_ari, datapath_ari) );
  
 
@@ -172,7 +173,7 @@ int main(int argc, char* argv[]) {
         if (reg_wr_enable) {
             printf("\t\tr%llu = %llx\n", target_reg.val, datapath_result.val);
         } else if (mem_wr_enable) {
-            printf("\t\t[%lld] = %llx\n", target_mem.val, datapath_result.val);
+            printf("\t\t[%llx] = %llx\n", target_mem.val, datapath_result.val);
         } else {
             printf("\n");
         }
@@ -184,10 +185,13 @@ int main(int argc, char* argv[]) {
             // fails. If so, the error function is called, and by setting a breakpoint
             // on it, all values are easy to inspect with a debugger.
             validate_pc_wr(tracer, instruction_number, next_pc);
-            if (reg_wr_enable)
+            if (reg_wr_enable) {
                 validate_reg_wr(tracer, instruction_number, target_reg, datapath_result);
-            if (mem_wr_enable)
+            }
+            if (mem_wr_enable) {
                 validate_mem_wr(tracer, instruction_number, target_mem, datapath_result);
+            }
+                
          // For A2 you'll need to add validation for the other register written
         // (for instructions which do write the other register)
         // AND you'll need to add a call to validate memory writes to check
@@ -201,7 +205,7 @@ int main(int argc, char* argv[]) {
     // writing to memory.
         pc = next_pc;
         memory_write(regs, 1, target_reg, datapath_result, reg_wr_enable);
-        memory_write(mem, 1, target_mem, datapath_result, mem_wr_enable); 
+        memory_write(mem, 1, target_mem, datapath_result, mem_wr_enable);
         
     }
     printf("Done\n");

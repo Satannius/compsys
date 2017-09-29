@@ -1,4 +1,9 @@
 
     movq $5,%rcx
+    movq $7,%rbx
+    movq $56,%r8
+    movq $127,%r9
+    movq %r8,8(%rax)
     movq %rbx,11(%rcx)
+    movq %r9,24(%rax)
     hlt
