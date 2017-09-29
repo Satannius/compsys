@@ -8,4 +8,7 @@
     movq %r9,8(%rcx)
     movq %r10,11(%r8)
     movq %r11,24(%rcx)
+    movq $127,%r13
+    movq $60,%r14
+    movq $1,%r15
     hlt

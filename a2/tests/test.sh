@@ -32,8 +32,20 @@ cd ../tests
 # ../src/sim ./movq_RtoM.out ./movq_RtoM.trace
 # echo ""
 
-#  echo ">>> Testing movq_Ptest.."
-#  ../architecture-tools/asm ./Ptest.x64 ./Ptest.out
-#  ../architecture-tools/sim ./Ptest.out ./Ptest.trace
-#  ../src/sim ./Ptest.out ./Ptest.trace
+# echo ">>> Testing movq_MtoR.."
+# ../architecture-tools/asm ./movq_MtoR.x64 ./movq_MtoR.out
+# ../architecture-tools/sim ./movq_MtoR.out movq_MtoR.trace
+# ../src/sim ./movq_MtoR.out ./movq_MtoR.trace
+# echo ""
+
+#  echo ">>> Testing compq.."
+#  ../architecture-tools/asm ./compq.x64 ./compq.out
+#  ../architecture-tools/sim ./compq.out ./compq.trace
+#  ../src/sim ./compq.out ./compq.trace
 #  echo ""
+
+# echo ">>> Testing movq_bug.."
+# ../architecture-tools/asm ./movq_bug.x64 ./movq_bug.out
+# ../architecture-tools/sim ./movq_bug.out movq_bug.trace
+# ../src/sim ./movq_bug.out ./movq_bug.trace
+# echo ""
