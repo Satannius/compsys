@@ -82,10 +82,12 @@ int main(int argc, char* argv[]) {
         bool is_move_ir = is(MOV_ItoR, major_op);
         bool is_move_rm = is(MOV_RtoM, major_op);
         bool is_move_mr = is(MOV_MtoR, major_op);
+        //bool is_move = (is_move_rr || is_move_ir || is_move_rm || is_move_mr);
 
         bool is_ari = (is(ARITHMETIC, major_op));
         bool is_jcc = (is(JCC, major_op));
         bool is_j3c = (is_jcc && !(is(0, major_op)));
+        //bool is_cmov = (is_move && !(is(0, major_op)) );
 
         bool has_regs = (is_move_rr || is_move_ir || is_ari);
         bool has_mem = (is_move_ir || is_move_rm || is_move_mr);
@@ -126,13 +128,17 @@ int main(int argc, char* argv[]) {
 
     // Arithmetic operations
     alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));
+
+    bool con_check = (eval_condition(cc, minor_op));
     bool jcc_res = (eval_condition(cc, minor_op));
+    //bool comv_res = (is_cmov || con_check);
 
     // val datapath_mov = or( use_if(is_move_rr, op_a),use_if(is_move_ir,sign_extended_imm));
+
     val datapath_mov = or(use_if((is_move_rr || is_move_rm), op_a), use_if(is_move_ir,sign_extended_imm));
     val datapath_ari = ari_res.result;
     
-    val datapath_result = or( use_if((is_move_rr || is_move_ir || is_move_rm), datapath_mov),
+    val datapath_result = or( use_if((con_check && (is_move_rr || is_move_ir || is_move_rm)), datapath_mov),
                               use_if(is_ari, datapath_ari) );
  
 
@@ -142,8 +148,8 @@ int main(int argc, char* argv[]) {
         val target_reg = reg_b;
         val target_mem = or(use_if(!has_mem, from_int(0)), use_if(has_mem, add(imm, op_b)));
 
-        bool reg_wr_enable = (is_move_rr || is_move_ir || (is_ari && !(has_cmp)) ); 
-        bool mem_wr_enable = is(MOV_RtoM, major_op);
+        bool reg_wr_enable = (con_check && (is_move_rr || is_move_ir || (is_ari && !(has_cmp))) ); 
+        bool mem_wr_enable = (con_check && (is(MOV_RtoM, major_op)) );
 
         // determine PC for next cycle. Right now we can only execute next in sequence.
     // For A2 you'll have to pick the right value for branches, call and return as
@@ -157,9 +163,9 @@ int main(int argc, char* argv[]) {
         // For A2, feel free to add more information you'd like for your own debugging
     
         printf("%llx : ", pc.val);
-        printf("of %d ", cc.of);
-        printf("zf %d ", cc.zf);
-        printf("sf %d ", cc.sf);
+        //printf("of %d ", cc.of);
+        //printf("zf %d ", cc.zf);
+        //printf("sf %d ", cc.sf);
         // printf(" reg_wr_enable %d ", reg_wr_enable);
         // printf(" mem_wr_enable %d ", mem_wr_enable);
         // printf(" imm: %llx ", imm.val);
