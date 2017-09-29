@@ -1,3 +1,0 @@
-
-    movq %rax,(%rcx)
-    hlt

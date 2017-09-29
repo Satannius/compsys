@@ -1,0 +1,10 @@
+
+    movq $5,%r8
+    movq $7,%r9
+    movq $56,%r10
+    movq $127,%r11
+    movq %rbx,(%rcx)
+    movq %r9,8(%rax)
+    movq %r10,11(%r8)
+    movq %r11,24(%rax)
+    hlt
