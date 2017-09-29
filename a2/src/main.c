@@ -55,6 +55,8 @@ int main(int argc, char* argv[]) {
 
     // a stop signal for stopping the simulation.
     bool stop = false;
+    // a sinnal for jump control instructions
+    bool has_cmp = false;
 
     // We need the instruction number for trace validation
     int instruction_number = 0;
@@ -67,13 +69,13 @@ int main(int argc, char* argv[]) {
         val inst_word = memory_read_unaligned(mem, 0, 1, pc, true);
 
         // decode - here we pick apart the instruction in major and minor opcode,
-	// register specifiers and any immediate value. Next we identify all the
-	// instructions and generate control signals:
-	// For A2 you'll need to add generation of more control signals to control
-	// the rest of the machine.
-	// Some of the signals below are not used initially, but you'll have to
-	// use them to finish A2. Since they are unused, gcc will generate warnings
-	// for them, but they are put here on purpose to make your task easier.
+    // register specifiers and any immediate value. Next we identify all the
+    // instructions and generate control signals:
+    // For A2 you'll need to add generation of more control signals to control
+    // the rest of the machine.
+    // Some of the signals below are not used initially, but you'll have to
+    // use them to finish A2. Since they are unused, gcc will generate warnings
+    // for them, but they are put here on purpose to make your task easier.
         val major_op = pick_bits(4,4, inst_word);   // 0xAb, first op
         val minor_op = pick_bits(0,4, inst_word);   // 0xaB, second op
 
@@ -86,9 +88,10 @@ int main(int argc, char* argv[]) {
         bool is_ari = (is(ARITHMETIC, major_op));
         bool is_jcc = (is(JCC, major_op));
 
-        bool has_regs = (is_move_rr || is_move_ir || is_ari || is_jcc);
+        bool has_regs = (is_move_rr || is_move_ir || is_ari);
         bool has_mem = (is_move_ir || is_move_rm || is_move_mr);
-        bool has_cmp  = (is(ARITHMETIC, major_op) && is(4, minor_op));
+        
+        has_cmp  = (is(ARITHMETIC, major_op) && is(4, minor_op));
 
         val size = or( use_if(!has_regs, from_int(1)), 
                    or( use_if( has_regs, from_int(2)),
@@ -102,7 +105,7 @@ int main(int argc, char* argv[]) {
         val imm_bytes = or( use_if(!has_mem, pick_bits(8, 32, inst_word)),
                             use_if( has_mem, pick_bits(16, 32, inst_word)));
         val imm = imm_bytes;
-        val sign_extended_imm = sign_extend(31,imm);
+        val sign_extended_imm = sign_extend(31, imm);
 
         // Set next instruction
         val next_inst_pc = add(pc, size);
@@ -139,13 +142,13 @@ int main(int argc, char* argv[]) {
         val target_reg = reg_b;
         val target_mem = or(use_if(!has_mem,from_int(0)),use_if(has_mem,add(imm, op_b)));
 
-        bool reg_wr_enable = (is_move_rr || is_move_ir || (is_ari && !(has_cmp))|| is_jcc); 
-        bool mem_wr_enable = ( (is(MOV_RtoM, major_op)) || is_jcc);
+        bool reg_wr_enable = (is_move_rr || is_move_ir || (is_ari && !(has_cmp)) ); 
+        bool mem_wr_enable = is(MOV_RtoM, major_op);
 
         // determine PC for next cycle. Right now we can only execute next in sequence.
     // For A2 you'll have to pick the right value for branches, call and return as
     // well.
-        val next_pc = next_inst_pc;
+        val next_pc = or( use_if(!(is_jcc), next_inst_pc), use_if(is_jcc, imm));
 
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
@@ -206,3 +209,4 @@ int main(int argc, char* argv[]) {
     }
     printf("Done\n");
 }
+
