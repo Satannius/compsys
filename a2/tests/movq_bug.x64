@@ -1,4 +1,5 @@
 
+    movq $0,%rbx
     movq $0,%rcx
     movq $5,%r8
     movq $7,%r9
