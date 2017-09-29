@@ -55,8 +55,6 @@ int main(int argc, char* argv[]) {
 
     // a stop signal for stopping the simulation.
     bool stop = false;
-    // a sinnal for jump control instructions
-    bool has_cmp = false;
 
     // We need the instruction number for trace validation
     int instruction_number = 0;
@@ -87,12 +85,13 @@ int main(int argc, char* argv[]) {
 
         bool is_ari = (is(ARITHMETIC, major_op));
         bool is_jcc = (is(JCC, major_op));
+        bool is_j3c = (is_jcc && !(is(0, major_op)));
 
         bool has_regs = (is_move_rr || is_move_ir || is_ari);
         bool has_mem = (is_move_ir || is_move_rm || is_move_mr);
         
-        has_cmp  = (is(ARITHMETIC, major_op) && is(4, minor_op));
-
+        bool has_cmp  = (is(ARITHMETIC, major_op) && is(4, minor_op));
+        
         val size = or( use_if(!has_regs, from_int(1)), 
                    or( use_if( has_regs, from_int(2)),
                    or( use_if( is_jcc, from_int(5)),
@@ -140,7 +139,7 @@ int main(int argc, char* argv[]) {
     // For A2 you'll likely have to extend this section as there will be two
     // register updates for some instructions.
         val target_reg = reg_b;
-        val target_mem = or(use_if(!has_mem,from_int(0)),use_if(has_mem,add(imm, op_b)));
+        val target_mem = or(use_if(!has_mem, from_int(0)), use_if(has_mem, add(imm, op_b)));
 
         bool reg_wr_enable = (is_move_rr || is_move_ir || (is_ari && !(has_cmp)) ); 
         bool mem_wr_enable = is(MOV_RtoM, major_op);
@@ -148,12 +147,18 @@ int main(int argc, char* argv[]) {
         // determine PC for next cycle. Right now we can only execute next in sequence.
     // For A2 you'll have to pick the right value for branches, call and return as
     // well.
-        val next_pc = or( use_if(!(is_jcc), next_inst_pc), use_if(is_jcc, imm));
+        val next_pc = or( use_if(!(is_jcc), next_inst_pc),
+                      or( use_if( (is_j3c && jcc_res), imm),
+                          use_if(  is_jcc, imm)) );
 
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
         // For A2, feel free to add more information you'd like for your own debugging
+    
         printf("%llx : ", pc.val);
+        printf("of %d ", cc.of);
+        printf("zf %d ", cc.zf);
+        printf("sf %d ", cc.sf);
         // printf(" reg_wr_enable %d ", reg_wr_enable);
         // printf(" mem_wr_enable %d ", mem_wr_enable);
         // printf(" imm: %llx ", imm.val);
@@ -203,6 +208,7 @@ int main(int argc, char* argv[]) {
     // need to write to an additional register for some instructions and implement
     // writing to memory.
         pc = next_pc;
+        cc = ari_res.cc;
         memory_write(regs, 1, target_reg, datapath_result, reg_wr_enable);
         memory_write(mem, 1, target_mem, datapath_result, mem_wr_enable); 
         
