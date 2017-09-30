@@ -1,0 +1,61 @@
+lessEqual:    
+    movq $5, %rax 
+    movq $5, %rcx
+    movq $10, %rdx
+    cmpq %rax, %rcx
+    cmovle %rdx, %rax
+    movq $3, %rax
+    cmpq %rcx, %rax
+    cmovle %rdx, %rax
+    cmpq %rcx, %rax
+    cmovle %rax, %rdx
+    nop
+lessThan:
+    movq $5, %rax 
+    movq $5, %rcx
+    movq $10, %rdx
+    cmpq %rax, %rcx
+    cmovl %rdx, %rax
+    addq %rcx, %rax
+    cmpq %rcx, %rax
+    cmovl %rdx, %rax
+    nop
+equal:
+    movq $2, %rax
+    movq $2, %rdx 
+    movq $4, %rcx
+    cmpq %rax, %rcx
+    cmove %rcx, %rax
+    addq %rax, %rdx
+    cmove %rax, %rcx
+    movq %rax, %rdx
+notequal:
+    movq $2, %rax
+    movq $2, %rdx
+    movq $3, %rcx
+    subq %rax, %rdx
+    cmovne %rax, %rdx 
+    addq %rcx, %rdx
+    cmovne %rax, %rdx 
+greaterequal:
+    movq $5, %rax 
+    movq $5, %rcx
+    movq $10, %rdx
+    cmpq %rax, %rcx
+    cmovle %rdx, %rax
+    movq $3, %rax
+    cmpq %rcx, %rax
+    cmovle %rdx, %rax
+    cmpq %rcx, %rax
+    cmovle %rax, %rdx
+greater:
+    movq $5, %rax 
+    movq $5, %rcx
+    movq $10, %rdx
+    cmpq %rax, %rcx
+    cmovl %rdx, %rax
+    addq %rcx, %rax
+    cmpq %rcx, %rax
+    cmovl %rdx, %rax
+    nop
+    hlt

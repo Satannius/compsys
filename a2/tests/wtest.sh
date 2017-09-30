@@ -11,6 +11,11 @@ echo ""
 
 
 echo ">>> -------------------------Tester----------------------------- .."
-../architecture-tools/asm ./arithmetic_test.x64 ./arithmetic_test.out
-../architecture-tools/sim ./arithmetic_test.out ./arithmetic_test.trace
-../src/sim ./arithmetic_test.out ./arithmetic_test.trace
+../architecture-tools/asm ./cmove.x64 ./cmove.out
+../architecture-tools/sim ./cmove.out ./cmove.trace
+#../src/sim ./cmove.out ./cmove.trace
+echo ">>> -------------------------Tester 2----------------------------- .."
+
+../architecture-tools/asm ./cmove.x64 ./cmove.out 
+../architecture-tools/sim ./cmove.out ./cmove.trace
+../src/sim ./cmove.out ./cmove.trace

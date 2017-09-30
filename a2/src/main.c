@@ -134,7 +134,8 @@ int main(int argc, char* argv[]) {
     // Arithmetic operations
     alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));
 
-    bool con_check = (eval_condition(cc, minor_op));
+
+    bool con_check = (eval_condition(cc, minor_op)); //move conditions her op
     bool jcc_res = (eval_condition(cc, minor_op));
     //bool comv_res = (is_cmov || con_check);
 
@@ -160,8 +161,8 @@ int main(int argc, char* argv[]) {
     // For A2 you'll have to pick the right value for branches, call and return as
     // well.
         val next_pc = or( use_if( (is_j3c && jcc_res), imm),
-                      or( use_if( (!(is_jcc) || !(jcc_res) ), next_inst_pc),
-                          use_if(!(is_j3c)&& is_jcc, imm)  ));
+                      or( use_if( (!(is_jcc) || !(jcc_res) ), next_inst_pc), 
+                          use_if(!(is_j3c) && is_jcc, imm)  ));
 
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
