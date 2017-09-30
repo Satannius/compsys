@@ -85,6 +85,10 @@ int main(int argc, char* argv[]) {
         //bool is_move = (is_move_rr || is_move_ir || is_move_rm || is_move_mr);
 
         bool is_ari = (is(ARITHMETIC, major_op));
+        bool is_ari_sub = (is(ARITHMETIC, major_op) && is(1, minor_op));
+        bool is_ari_and = (is(ARITHMETIC, major_op) && is(2, minor_op));
+        bool is_ari_xor = (is(ARITHMETIC, major_op) && is(3, minor_op));        
+
         bool is_jcc = (is(JCC, major_op));
         bool is_j3c = (is_jcc && !(is(0, major_op)));
         //bool is_cmov = (is_move && !(is(0, major_op)) );
@@ -94,6 +98,8 @@ int main(int argc, char* argv[]) {
         
         bool has_cmp  = (is(ARITHMETIC, major_op) && is(4, minor_op));
 
+        bool reg_wr_en = (is_ari_and || is_ari_xor || is_ari_sub);
+        
         val size = or( use_if((!has_regs && !has_mem), from_int(1)), 
                    or( use_if( has_regs, from_int(2)),
                    or( use_if( is_jcc, from_int(5)),
@@ -139,7 +145,7 @@ int main(int argc, char* argv[]) {
     val datapath_ari = ari_res.result;
     
     val datapath_result = or( use_if((con_check && (is_move_rr || is_move_ir || is_move_rm)), datapath_mov),
-                              use_if(is_ari, datapath_ari) );
+                              use_if((is_ari), datapath_ari) );
  
 
     // pick result value and target register
@@ -148,10 +154,11 @@ int main(int argc, char* argv[]) {
         val target_reg = reg_b;
         val target_mem = or(use_if(!has_mem, from_int(0)), use_if(has_mem, add(imm, op_b)));
 
-        bool reg_wr_enable = (con_check && (is_move_rr || is_move_ir || (is_ari && !(has_cmp))) ); 
-        bool mem_wr_enable = (con_check && (is(MOV_RtoM, major_op)) );
 
-        // determine PC for next cycle. Right now we can only execute next in sequence.
+        bool reg_wr_enable = ((con_check || reg_wr_en) && (is_move_rr || is_move_ir || is_ari && !(has_cmp))   ); 
+        bool mem_wr_enable = ((con_check || reg_wr_en) && (is(MOV_RtoM, major_op)) );
+
+     // determine PC for next cycle. Right now we can only execute next in sequence.
     // For A2 you'll have to pick the right value for branches, call and return as
     // well.
         val next_pc = or( use_if(!(is_jcc), next_inst_pc),
@@ -166,7 +173,9 @@ int main(int argc, char* argv[]) {
         //printf("of %d ", cc.of);
         //printf("zf %d ", cc.zf);
         //printf("sf %d ", cc.sf);
-        // printf(" reg_wr_enable %d ", reg_wr_enable);
+        //printf(" reg_wr_en %d", reg_wr_en);
+        //printf(" reg_wr_enable %d ", reg_wr_enable);
+        //printf(" Jcc_res %d ", jcc_res);
         // printf(" mem_wr_enable %d ", mem_wr_enable);
         // printf(" imm: %llx ", imm.val);
         // printf(" sign_extended_imm: %llx ", sign_extended_imm.val);
@@ -179,7 +188,7 @@ int main(int argc, char* argv[]) {
         // printf(" reg_b: %llu ", reg_b.val);
         // printf(" op_a: %llu ", op_a.val);
         // printf(" op_b: %llu ", op_b.val);
-        // printf(" datapath_result: %llx ", datapath_result);
+        //printf(" eyyyyyy: datapath_result: %llx ", datapath_result.val);
         for (int j=0; j<size.val; ++j) {
           unsigned int byte = (inst_word.val >> (8*j)) & 0xff;
             printf("%x ", byte);
