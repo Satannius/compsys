@@ -161,9 +161,9 @@ int main(int argc, char* argv[]) {
      // determine PC for next cycle. Right now we can only execute next in sequence.
     // For A2 you'll have to pick the right value for branches, call and return as
     // well.
-        val next_pc = or( use_if(!(is_jcc), next_inst_pc),
-                      or( use_if( (is_j3c && jcc_res), imm),
-                          use_if(  is_jcc, imm)) );
+        val next_pc = or( use_if( (is_j3c && jcc_res), imm),
+                      or( use_if( (!(is_jcc) || !(jcc_res) ), next_inst_pc),
+                          use_if(!(is_j3c)&& is_jcc, imm)) );
 
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
