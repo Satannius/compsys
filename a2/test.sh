@@ -32,8 +32,8 @@ done
 
 echo "Tests completed with ${errorcount} error(s) detected."
 
-echo "removing generated .out and .trace files"
-for f in ./tests/*.out
+echo ">>> Removing generated .out and .trace files .."
+for f in ./tests/*.x64
 do
     file="${f%.*}"
     rm ${file}.out

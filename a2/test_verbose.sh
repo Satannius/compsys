@@ -1,5 +1,4 @@
 echo ">>> Building assembler and reference simulator .."
-cd ..
 cd architecture-tools/
 make
 cd ..
@@ -9,31 +8,6 @@ make
 cd ..
 cd tests/
 echo ""
-
-# errorcount=0
-# exitcode=0
-# for f in ./*.x64
-# do
-#     echo ">>> Testing ${f}"
-#     asm=$(../architecture-tools/asm ./${f} ./${f}.out)
-#     trace=$(../architecture-tools/sim ./${f}.out ${f}.trace)
-#     sim=$( ../src/sim ./${f}.out ./${f}.trace)
-#     actual=${sim:(-4)}
-#     expected="Done"
-#     if [ "${actual}" != "${expected}" ]; then
-#             ((errorcount++))
-#             echo "    Failed :-("
-#             echo ""
-#             exitcode=1
-#     else
-#         echo "    Success :-)"
-#         echo ""
-#     fi
-# done
-
-# echo "Tests completed with ${errorcount} error(s) detected."
-
-# exit $exitcode
 
 #echo ">>> Testing hlt.."
 #../architecture-tools/asm ./hlt.x64 ./hlt.out
@@ -78,12 +52,12 @@ echo ""
 #  ../src/sim ./compq.out ./compq.trace
 #  echo ""
 
-# echo ">>> Testing call.."
-# ../architecture-tools/asm ./call_ret.x64
-# ../architecture-tools/asm ./call_ret.x64 ./call_ret.out
-# ../architecture-tools/sim ./call_ret.out ./call_ret.trace
-# ../src/sim ./call_ret.out ./call_ret.trace
-# echo ""
+echo ">>> Testing call.."
+../architecture-tools/asm ./call_ret.x64
+../architecture-tools/asm ./call_ret.x64 ./call_ret.out
+../architecture-tools/sim ./call_ret.out ./call_ret.trace
+../src/sim ./call_ret.out ./call_ret.trace
+echo ""
 
 # echo ">>> Testing push_pop.."
 # ../architecture-tools/asm ./push_pop.x64 ./push_pop.out
