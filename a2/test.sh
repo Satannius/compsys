@@ -32,4 +32,13 @@ done
 
 echo "Tests completed with ${errorcount} error(s) detected."
 
+echo "removing generated .out and .trace files"
+for f in ./tests/*.out
+do
+    file="${f%.*}"
+    rm ${file}.out
+    rm ${file}.trace
+done
+echo "files has been removed."
+
 exit $exitcode

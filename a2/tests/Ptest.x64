@@ -1,0 +1,7 @@
+    movq $0,%rcx
+    movq $127,%r8
+    movq %r8,8(%rcx)
+    movq 8(%rcx),%r10
+    movq $0,%rcx
+    hlt
+  
