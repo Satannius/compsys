@@ -71,6 +71,19 @@ echo ""
 #  ../src/sim ./compq.out ./compq.trace
 #  echo ""
 
+echo ">>> Testing call.."
+../architecture-tools/asm ./call.x64
+../architecture-tools/asm ./call.x64 ./call.out
+../architecture-tools/sim ./call.out ./call.trace
+../src/sim ./call.out ./call.trace
+echo ""
+
+# echo ">>> Testing push_pop.."
+# ../architecture-tools/asm ./push_pop.x64 ./push_pop.out
+# ../architecture-tools/sim ./push_pop.out ./push_pop.trace
+# ../src/sim ./push_pop.out ./push_pop.trace
+# echo ""
+
 # echo ">>> Testing movq_bug.."
 # ../architecture-tools/asm ./movq_bug.x64 ./movq_bug.out
 # ../architecture-tools/sim ./movq_bug.out movq_bug.trace
