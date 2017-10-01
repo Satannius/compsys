@@ -11,11 +11,11 @@ echo ""
 
 
 echo ">>> -------------------------Tester----------------------------- .."
-#../architecture-tools/asm ./jump.x64 ./jump.out
-#../architecture-tools/sim ./jump.out ./jump.trace
-#../src/sim ./jump.out ./jump.trace
+#../architecture-tools/asm ./Ptest.x64 ./Ptest.out
+#../architecture-tools/sim ./Ptest.out ./Ptest.trace
+#../src/sim ./Ptest.out ./Ptest.trace
 echo ">>> -------------------------Tester 2----------------------------- .."
 
-../architecture-tools/asm ./jump.x64 ./jump.out 
-../architecture-tools/sim ./jump.out ./jump.trace
-../src/sim ./jump.out ./jump.trace
+../architecture-tools/asm ./Ptest.x64 ./Ptest.out 
+../architecture-tools/sim ./Ptest.out ./Ptest.trace
+../src/sim ./Ptest.out ./Ptest.trace
