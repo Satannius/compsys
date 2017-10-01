@@ -1,0 +1,20 @@
+
+    .pos 0
+    movq stack, %rsp
+    movq $5,%r8
+    call test
+    nop
+    nop
+    nop
+    nop
+    nop
+    nop
+    hlt
+
+test:
+    movq $127,%r9
+    movq $3,%r10
+    ret
+    
+    .pos 0x200
+stack:
