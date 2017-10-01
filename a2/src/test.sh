@@ -1,11 +1,11 @@
 echo ">>> Building assembler and reference simulator .."
+cd ..
 cd architecture-tools/
 make
 cd ..
 echo ">>> Building simulator .."
 cd src/
 make
-cd ..
 echo ""
 
 errorcount=0
@@ -14,9 +14,9 @@ for f in ./tests/*.x64
 do
     file="${f%.*}"
     echo ">>> Testing ${file}"
-    asm=$(./architecture-tools/asm ${file}.x64 ${file}.out)
-    trace=$(./architecture-tools/sim ${file}.out ${file}.trace)
-    sim=$( ./src/sim ${file}.out ${file}.trace)
+    asm=$(../architecture-tools/asm ${file}.x64 ${file}.out)
+    trace=$(../architecture-tools/sim ${file}.out ${file}.trace)
+    sim=$( ../src/sim ${file}.out ${file}.trace)
     actual=${sim:(-4)}
     expected="Done"
     if [ "${actual}" != "${expected}" ]; then
