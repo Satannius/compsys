@@ -79,10 +79,10 @@ echo ""
 #  echo ""
 
 # echo ">>> Testing call.."
-# ../architecture-tools/asm ./call.x64
-# ../architecture-tools/asm ./call.x64 ./call.out
-# ../architecture-tools/sim ./call.out ./call.trace
-# ../src/sim ./call.out ./call.trace
+# ../architecture-tools/asm ./call_ret.x64
+# ../architecture-tools/asm ./call_ret.x64 ./call_ret.out
+# ../architecture-tools/sim ./call_ret.out ./call_ret.trace
+# ../src/sim ./call_ret.out ./call_ret.trace
 # echo ""
 
 # echo ">>> Testing push_pop.."
@@ -97,9 +97,9 @@ echo ""
 # ../src/sim ./movq_bug.out ./movq_bug.trace
 # echo ""
 
-echo ">>> Testing arithmetic_test.."
-../architecture-tools/asm ./arithmetic_test.x64
-../architecture-tools/asm ./arithmetic_test.x64 ./arithmetic_test.out
-../architecture-tools/sim ./arithmetic_test.out arithmetic_test.trace
-../src/sim ./arithmetic_test.out ./arithmetic_test.trace
-echo ""
+# echo ">>> Testing arithmetic_test.."
+# ../architecture-tools/asm ./arithmetic_test.x64
+# ../architecture-tools/asm ./arithmetic_test.x64 ./arithmetic_test.out
+# ../architecture-tools/sim ./arithmetic_test.out arithmetic_test.trace
+# ../src/sim ./arithmetic_test.out ./arithmetic_test.trace
+# echo ""

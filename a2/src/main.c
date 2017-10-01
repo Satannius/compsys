@@ -133,7 +133,13 @@ int main(int argc, char* argv[]) {
         // Read values in registers
         val op_a = memory_read(regs, 0, reg_a, true);
         val op_b = memory_read(regs, 1, reg_b, true);
-        val op_rsp = from_int(memory_read(regs, 2, REG_SP, is_call).val + (-8));
+
+        val op_rsp = memory_read(regs, 2, REG_SP, (is_call || is_ret));
+        int offset = or(use_if(is_call,from_int(-8)),use_if(is_ret,from_int(8))).val;
+        val op_rsp_off = from_int(op_rsp.val + offset);
+
+        // Read value in memory
+        val mem_val = memory_read(mem, 1, op_rsp, is_ret);
 
     // select result for register update
     // For A2 there'll be a lot more to choose from, once you've added use of
@@ -161,7 +167,7 @@ int main(int argc, char* argv[]) {
         val target_reg = reg_b;
         val target_mem = or(use_if(!has_mem, from_int(0)),
                          or(use_if(has_mem, add(imm, op_b)),
-                            use_if(is_call,op_rsp)));
+                            use_if(is_call || is_ret, op_rsp_off)));
 
         bool reg_wr_enable = ((con_check || has_regs_ari) && (is_move_rr || is_move_ir || (is_ari && !(is_cmpq)))); 
         bool mem_wr_enable = ((con_check || has_regs_ari) && (is_move_rm) );
@@ -170,16 +176,20 @@ int main(int argc, char* argv[]) {
     // For A2 you'll have to pick the right value for branches, call and return as
     // well.
         
-        val next_pc = or( use_if( ((!(is_jcc) || !(jcc_res)) && !is_call), next_inst_pc),
+        val next_pc = or( use_if( ((!(is_jcc) || !(jcc_res)) && (!is_call && !is_ret)), next_inst_pc),
                       or( use_if( (is_j3c && jcc_res), imm),
                       or( use_if( (is_jcc && !is_j3c), imm),
-                          use_if(is_call, imm))));
+                      or( use_if(is_call, imm),
+                          use_if(is_ret, mem_val))
+                          )));
 
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
         // For A2, feel free to add more information you'd like for your own debugging
     
         printf("%llx : ", pc.val);
+        // printf("mem_val: %llx ", mem_val.val);
+        // printf("op_sp_off: %llx ", op_rsp_off.val);
         // printf("instruction_number: %d ", instruction_number);
         // printf("next_inst_pc: %llx ", next_inst_pc);
         // printf("next_pc: %llx ", next_pc);
@@ -230,8 +240,11 @@ int main(int argc, char* argv[]) {
                 validate_mem_wr(tracer, instruction_number, target_mem, datapath_result);
             }
             if (is_call) {
-                validate_reg_wr(tracer, instruction_number, REG_SP, op_rsp);
-                validate_mem_wr(tracer, instruction_number, op_rsp, next_inst_pc);
+                validate_reg_wr(tracer, instruction_number, REG_SP, op_rsp_off);
+                validate_mem_wr(tracer, instruction_number, op_rsp_off, next_inst_pc);
+            }
+            if (is_ret) {
+                validate_reg_wr(tracer, instruction_number, REG_SP, op_rsp_off);
             }
                 
          // For A2 you'll need to add validation for the other register written
@@ -250,8 +263,9 @@ int main(int argc, char* argv[]) {
 
         memory_write(regs, 1, target_reg, datapath_result, reg_wr_enable);
         memory_write(mem, 1, target_mem, datapath_result, mem_wr_enable);
-        memory_write(mem, 1, op_rsp, next_inst_pc, is_call);
-        memory_write(regs, 1, REG_SP, op_rsp, is_call);
+        memory_write(mem, 1, op_rsp_off, next_inst_pc, is_call);
+        memory_write(regs, 1, REG_SP, op_rsp_off, is_call);
+        memory_write(regs, 1, REG_SP, op_rsp_off, is_ret);
     }
     printf("Done\n");
 }
