@@ -52,12 +52,12 @@ echo ""
 #  ../src/sim ./compq.out ./compq.trace
 #  echo ""
 
-echo ">>> Testing call.."
-../architecture-tools/asm ./call_ret.x64
-../architecture-tools/asm ./call_ret.x64 ./call_ret.out
-../architecture-tools/sim ./call_ret.out ./call_ret.trace
-../src/sim ./call_ret.out ./call_ret.trace
-echo ""
+# echo ">>> Testing call.."
+# ../architecture-tools/asm ./call_ret.x64
+# ../architecture-tools/asm ./call_ret.x64 ./call_ret.out
+# ../architecture-tools/sim ./call_ret.out ./call_ret.trace
+# ../src/sim ./call_ret.out ./call_ret.trace
+# echo ""
 
 # echo ">>> Testing push_pop.."
 # ../architecture-tools/asm ./push_pop.x64 ./push_pop.out
