@@ -78,6 +78,9 @@ int main(int argc, char* argv[]) {
         val major_op = pick_bits(4,4, inst_word);   // 0xAb, first op
         val minor_op = pick_bits(0,4, inst_word);   // 0xaB, second op
 
+        // Set condition flag
+        bool cc_flag = (eval_condition(cc, minor_op));
+
         // Set data movement / movq signals
         bool is_move_rr = is(MOV_RtoR, major_op);
         bool is_move_ir = is(MOV_ItoR, major_op);
@@ -94,7 +97,6 @@ int main(int argc, char* argv[]) {
         // Set control flow signals
         bool is_jcc = (is(JCC, major_op));
         bool is_j3c = (is_jcc && !(is(0, major_op)));
-        //bool is_cmov = (is_move && !(is(0, major_op)) );
         bool is_call = (is(CALL, major_op));
         bool is_ret = (is(RET, major_op));
         bool is_push = (is(PUSH, major_op));
@@ -151,20 +153,17 @@ int main(int argc, char* argv[]) {
     // Arithmetic operations
     alu_execute_result ari_res = (alu_execute(minor_op, op_a, op_b));
 
-
-    bool con_check = (eval_condition(cc, minor_op)); //move conditions her op
-    bool jcc_res = (eval_condition(cc, minor_op));
-    //bool comv_res = (is_cmov || con_check);
+    
 
     val datapath_mov = or(use_if( (is_move_rr || is_move_rm), op_a), use_if(is_move_ir, sign_extended_imm));
     val datapath_ari = ari_res.result;
-    val datapath_mem = or(use_if(is_call,next_inst_pc),use_if(is_push,op_a));
     
-    val datapath_result = or( use_if((con_check && (is_move_rr || is_move_ir || is_move_rm)), datapath_mov),
+    val datapath_result = or( use_if((cc_flag && (is_move_rr || is_move_ir || is_move_rm)), datapath_mov),
                             or( use_if(is_push, op_a),
-                            or( use_if(is_call,next_inst_pc),
-                            or( use_if(is_pop, mem_val),
-                                use_if((is_ari), datapath_ari)))));
+                            or( use_if(is_call, next_inst_pc),
+                            or( use_if(is_ret || is_pop, mem_val),
+                                use_if(is_ari, datapath_ari)
+                                                            ))));
  
     // pick result value and target register
     // For A2 you'll likely have to extend this section as there will be two
@@ -178,28 +177,29 @@ int main(int argc, char* argv[]) {
                             use_if(is_call || is_ret || is_push, op_rsp_off))));
 
         bool reg_ops = (is_pop || is_move_rr || is_move_ir || (is_ari && !(is_cmpq)));
-        bool reg_wr_enable = ((con_check || has_regs_ari) && (reg_ops));
-        bool reg_sp_wr_enable = (con_check && (is_call || is_ret || is_push || is_pop));
+        bool reg_wr_enable = ((cc_flag || has_regs_ari) && (reg_ops));
+        bool reg_sp_wr_enable = (cc_flag && (is_call || is_ret || is_push || is_pop));
 
         bool mem_ops = (is_move_rm || is_call || is_push);
-        bool mem_wr_enable = ((con_check) && (mem_ops));
+        bool mem_wr_enable = ((cc_flag) && (mem_ops));
 
      // determine PC for next cycle. Right now we can only execute next in sequence.
     // For A2 you'll have to pick the right value for branches, call and return as
     // well.
         
-        val next_pc = or( use_if( ((!(is_jcc) || !(jcc_res)) && (!is_call && !is_ret)), next_inst_pc),
-                      or( use_if( (is_j3c && jcc_res), imm),
+        val next_pc = or( use_if( ((!(is_jcc) || !(cc_flag)) && (!is_call && !is_ret)), next_inst_pc),
+                      or( use_if( (is_j3c && cc_flag), imm),
                       or( use_if( (is_jcc && !is_j3c), imm),
                       or( use_if(is_call, imm),
-                          use_if(is_ret, mem_val))
-                          )));
+                          use_if(is_ret, datapath_result)
+                          ))));
+
 
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
         // For A2, feel free to add more information you'd like for your own debugging
     
-        printf("%3llx : ", pc.val);
+        /* DEBUG INFORMATION */
         // printf("mem_val: %llx ", mem_val.val);
         // printf("instruction_number: %d ", instruction_number);
         // printf("next_inst_pc: %llx ", next_inst_pc);
@@ -211,7 +211,7 @@ int main(int argc, char* argv[]) {
         // printf(" reg_sp_wr_enable %d ", reg_sp_wr_enable);
         // printf(" mem_wr_enable %d ", mem_wr_enable);
         // printf(" has_regs_ari %d", has_regs_ari);
-        // printf(" Jcc_res %d ", jcc_res);
+        // printf(" cc_flag %d ", cc_flag);
         // printf(" sign_extended_imm: %llx ", sign_extended_imm.val);
         // printf(" target_reg: %llx ", target_reg.val);
         // printf(" target_mem: %llx ", target_mem.val);
@@ -229,6 +229,9 @@ int main(int argc, char* argv[]) {
         // printf("Rsp: %llx ", (memory_read(regs, 0, REG_SP, true)));
         // printf("Mem: %llx ", (memory_read(mem, 0, (memory_read(regs, 0, REG_SP, true)), true)));
         // printf("is_call: %d ", is_call);
+
+        /* PROGRESS PRETTY PRINTING */
+        printf("%3llx : ", pc.val);
         for (int j=0; j<size.val; ++j) {
           unsigned int byte = (inst_word.val >> (8*j)) & 0xff;
             printf("%x ", byte);
