@@ -1,3 +1,6 @@
+# Ignore architecture-tools to avoid compatibility issues
+architecture-tools/*
+
 # Prerequisites
 *.d
 
