@@ -2,8 +2,13 @@
     .pos 0
     movq stack, %rsp
     movq $127, %r8
+    movq $56, %r9
     pushq %r8
-    popq %r9
+    pushq %r9
+    nop
+    nop
+    popq %r10
+    popq %r11
     hlt
 
     .pos 0x200
