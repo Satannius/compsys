@@ -1,7 +1,8 @@
 echo ">>> Building simulator .."
-cd ./src
+cd src/
 make
 cd ..
+cd tests/
 echo ""
 
 errorcount=0

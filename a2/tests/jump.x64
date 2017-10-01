@@ -1,0 +1,55 @@
+start:    
+    movq $3, %rax
+    movq $0, %rcx
+    movq $1, %rdx
+    jmp jump_done   
+
+failed:
+    movq $10, %rax
+    movq $10, %rcx
+    hlt
+
+complete:
+    movq $15, %rax
+    movq $15, %rcx    
+    hlt
+    
+jump_done:
+    addq %rdx, %rcx
+    cmpq %rax, %rcx
+    jle jump_done
+    movq $0, %rcx
+
+jle_done:
+    addq %rdx, %rcx
+    cmpq %rax, %rcx
+    jl jle_done
+    movq $0, %rcx
+
+jl_done:
+    addq %rdx, %rcx
+    cmpq %rax, %rcx
+    je jl_done
+    movq $0, %rcx
+
+je_done:
+    cmpq %rax, %rax
+    jne failed
+    cmpq %rax, %rcx
+    jne jne_done
+
+jne_done:
+    addq %rdx, %rcx
+    cmpq %rcx, %rax
+    jge jne_done
+    movq $0, %rax
+
+jge_done:
+    addq %rdx, %rcx
+    cmpq %rcx, %rax
+    jg jge_done
+    movq $0, %rax
+
+jg_done:
+    jmp complete
+
