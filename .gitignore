@@ -15,3 +15,5 @@ a2/src/sim
 *.trace
 
 a2/architecture-tools/
+
+*.zip
