@@ -97,9 +97,12 @@ int main(int argc, char* argv[]) {
         //bool is_cmov = (is_move && !(is(0, major_op)) );
         bool is_call = (is(CALL, major_op));
         bool is_ret = (is(RET, major_op));
+        bool is_push = (is(PUSH, major_op));
+        bool is_pop = (is(POP, major_op));
        
         // Set size of instruction byte according to function
-        bool has_regs = (is_move_rr || is_move_ir || is_ari);
+        bool one_reg = (is_move_ir || is_push || is_pop);
+        bool has_regs = (is_move_rr || is_ari || one_reg);
         bool has_mem = (is_move_ir || is_move_rm || is_move_mr);
         bool has_regs_ari = (is_ari_and || is_ari_xor || is_ari_sub);
 
@@ -133,7 +136,13 @@ int main(int argc, char* argv[]) {
         // Read values in registers
         val op_a = memory_read(regs, 0, reg_a, true);
         val op_b = memory_read(regs, 1, reg_b, true);
-        val op_rsp = from_int(memory_read(regs, 2, REG_SP, is_call).val + (-8));
+        
+        val op_rsp = memory_read(regs, 2, REG_SP, (is_call || is_ret || is_push || is_pop));
+        int offset = or(use_if((is_call || is_push),from_int(-8)),use_if((is_ret || is_pop),from_int(8))).val;
+        val op_rsp_off = from_int(op_rsp.val + offset);
+
+        // Read value in memory
+        val mem_val = memory_read(mem, 1, op_rsp, is_ret || is_pop);
 
     // select result for register update
     // For A2 there'll be a lot more to choose from, once you've added use of
@@ -147,50 +156,64 @@ int main(int argc, char* argv[]) {
     bool jcc_res = (eval_condition(cc, minor_op));
     //bool comv_res = (is_cmov || con_check);
 
-    // val datapath_mov = or( use_if(is_move_rr, op_a),use_if(is_move_ir,sign_extended_imm));
-
     val datapath_mov = or(use_if( (is_move_rr || is_move_rm), op_a), use_if(is_move_ir, sign_extended_imm));
     val datapath_ari = ari_res.result;
+    val datapath_mem = or(use_if(is_call,next_inst_pc),use_if(is_push,op_a));
     
     val datapath_result = or( use_if((con_check && (is_move_rr || is_move_ir || is_move_rm)), datapath_mov),
-                              use_if((is_ari), datapath_ari) );
+                            or( use_if(is_push, op_a),
+                            or( use_if(is_call,next_inst_pc),
+                            or( use_if(is_pop, mem_val),
+                                use_if((is_ari), datapath_ari)))));
  
     // pick result value and target register
     // For A2 you'll likely have to extend this section as there will be two
     // register updates for some instructions.
-        val target_reg = reg_b;
+        val target_reg = or(use_if((!is_pop && !is_call), reg_b),
+                            or(use_if(is_pop, reg_a),
+                            use_if((is_call || is_push || is_ret), REG_SP)));
         val target_mem = or(use_if(!has_mem, from_int(0)),
                          or(use_if(has_mem, add(imm, op_b)),
-                            use_if(is_call,op_rsp)));
+                         or(use_if(is_pop, op_rsp),
+                            use_if(is_call || is_ret || is_push, op_rsp_off))));
 
-        bool reg_wr_enable = ((con_check || has_regs_ari) && (is_move_rr || is_move_ir || (is_ari && !(is_cmpq)))); 
-        bool mem_wr_enable = ((con_check || has_regs_ari) && (is_move_rm) );
+        bool reg_ops = (is_pop || is_move_rr || is_move_ir || (is_ari && !(is_cmpq)));
+        bool reg_wr_enable = ((con_check || has_regs_ari) && (reg_ops));
+        bool reg_sp_wr_enable = (con_check && (is_call || is_ret || is_push || is_pop));
+
+        bool mem_ops = (is_move_rm || is_call || is_push);
+        bool mem_wr_enable = ((con_check) && (mem_ops));
 
      // determine PC for next cycle. Right now we can only execute next in sequence.
     // For A2 you'll have to pick the right value for branches, call and return as
     // well.
         
-        val next_pc = or( use_if( ((!(is_jcc) || !(jcc_res)) && !is_call), next_inst_pc),
+        val next_pc = or( use_if( ((!(is_jcc) || !(jcc_res)) && (!is_call && !is_ret)), next_inst_pc),
                       or( use_if( (is_j3c && jcc_res), imm),
                       or( use_if( (is_jcc && !is_j3c), imm),
-                          use_if(is_call, imm))));
+                      or( use_if(is_call, imm),
+                          use_if(is_ret, mem_val))
+                          )));
 
         // potentially pretty-print something to show progress before
         // ending cycle and overwriting state from start of cycle:
         // For A2, feel free to add more information you'd like for your own debugging
     
-        printf("%llx : ", pc.val);
+        printf("%3llx : ", pc.val);
+        // printf("mem_val: %llx ", mem_val.val);
         // printf("instruction_number: %d ", instruction_number);
         // printf("next_inst_pc: %llx ", next_inst_pc);
         // printf("next_pc: %llx ", next_pc);
-        //printf("of %d ", cc.of);
-        //printf("zf %d ", cc.zf);
-        //printf("sf %d ", cc.sf);
+        // printf("of %d ", cc.of);
+        // printf("zf %d ", cc.zf);
+        // printf("sf %d ", cc.sf);
         // printf(" reg_wr_enable %d ", reg_wr_enable);
-        // printf(" has_regs_ari %d", has_regs_ari);
+        // printf(" reg_sp_wr_enable %d ", reg_sp_wr_enable);
         // printf(" mem_wr_enable %d ", mem_wr_enable);
-        //printf(" Jcc_res %d ", jcc_res);
+        // printf(" has_regs_ari %d", has_regs_ari);
+        // printf(" Jcc_res %d ", jcc_res);
         // printf(" sign_extended_imm: %llx ", sign_extended_imm.val);
+        // printf(" target_reg: %llx ", target_reg.val);
         // printf(" target_mem: %llx ", target_mem.val);
         // printf(" inst_word: %llx ", inst_word.val);
         // printf(" major_op: %llx ", major_op.val);
@@ -199,8 +222,10 @@ int main(int argc, char* argv[]) {
         // printf(" reg_a: %llu ", reg_a.val);
         // printf(" reg_b: %llu ", reg_b.val);
         // printf(" op_a: %llu ", op_a.val);
+        // printf(" op_rsp: %llx ", op_rsp.val);
+        // printf(" op_rsp_off: %llx ", op_rsp_off.val);
         // printf(" op_b: %llu ", op_b.val);
-        // printf(" datapath_result: %llx ", datapath_result);
+        // printf(" datapath_result: %llx ", datapath_result.val);
         // printf("Rsp: %llx ", (memory_read(regs, 0, REG_SP, true)));
         // printf("Mem: %llx ", (memory_read(mem, 0, (memory_read(regs, 0, REG_SP, true)), true)));
         // printf("is_call: %d ", is_call);
@@ -209,12 +234,15 @@ int main(int argc, char* argv[]) {
             printf("%x ", byte);
         }
         if (reg_wr_enable) {
-            printf("\t\tr%llu = %llx\n", target_reg.val, datapath_result.val);
-        } else if (mem_wr_enable) {
-            printf("\t\t[%llx] = %llx\n", target_mem.val, datapath_result.val);
-        } else {
-            printf("\n");
+            printf("\t\tr%llu = %llx", target_reg.val, datapath_result.val);
         }
+        if (reg_sp_wr_enable) {
+            printf("\t\tr%llu = %llx", REG_SP.val, op_rsp_off.val);
+        }
+        if (mem_wr_enable) {
+            printf("\t\t[%llx] = %llx", target_mem.val, datapath_result.val);
+        }
+        printf("\n");
 
         if ((tracer != NULL) & !stop) {
             // Validate values written to registers and memory against trace from
@@ -226,12 +254,11 @@ int main(int argc, char* argv[]) {
             if (reg_wr_enable) {
                 validate_reg_wr(tracer, instruction_number, target_reg, datapath_result);
             }
+            if (reg_sp_wr_enable) {
+                validate_reg_wr(tracer, instruction_number, REG_SP, op_rsp_off);
+            }
             if (mem_wr_enable) {
                 validate_mem_wr(tracer, instruction_number, target_mem, datapath_result);
-            }
-            if (is_call) {
-                validate_reg_wr(tracer, instruction_number, REG_SP, op_rsp);
-                validate_mem_wr(tracer, instruction_number, op_rsp, next_inst_pc);
             }
                 
          // For A2 you'll need to add validation for the other register written
@@ -248,10 +275,9 @@ int main(int argc, char* argv[]) {
         pc = next_pc;
         cc = ari_res.cc;
 
-        memory_write(regs, 1, target_reg, datapath_result, reg_wr_enable);
+        memory_write(regs, 0, target_reg, datapath_result, reg_wr_enable);
+        memory_write(regs, 1, REG_SP, op_rsp_off, reg_sp_wr_enable);
         memory_write(mem, 1, target_mem, datapath_result, mem_wr_enable);
-        memory_write(mem, 1, op_rsp, next_inst_pc, is_call);
-        memory_write(regs, 1, REG_SP, op_rsp, is_call);
     }
     printf("Done\n");
 }
