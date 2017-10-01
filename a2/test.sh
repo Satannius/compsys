@@ -1,8 +1,11 @@
+echo ">>> Building assembler and reference simulator .."
+cd architecture-tools/
+make
+cd ..
 echo ">>> Building simulator .."
 cd src/
 make
 cd ..
-cd tests/
 echo ""
 
 errorcount=0

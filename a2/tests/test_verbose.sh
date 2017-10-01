@@ -1,7 +1,13 @@
-echo ">>> Building simulator .."
-cd ../src
+echo ">>> Building assembler and reference simulator .."
+cd ..
+cd architecture-tools/
 make
-cd ../tests
+cd ..
+echo ">>> Building simulator .."
+cd src/
+make
+cd ..
+cd tests/
 echo ""
 
 # errorcount=0
@@ -66,17 +72,18 @@ echo ""
 # echo ""
 
 #  echo ">>> Testing compq.."
+#  ../architecture-tools/asm ./compq.x64
 #  ../architecture-tools/asm ./compq.x64 ./compq.out
 #  ../architecture-tools/sim ./compq.out ./compq.trace
 #  ../src/sim ./compq.out ./compq.trace
 #  echo ""
 
-echo ">>> Testing call.."
-../architecture-tools/asm ./call.x64
-../architecture-tools/asm ./call.x64 ./call.out
-../architecture-tools/sim ./call.out ./call.trace
-../src/sim ./call.out ./call.trace
-echo ""
+# echo ">>> Testing call.."
+# ../architecture-tools/asm ./call.x64
+# ../architecture-tools/asm ./call.x64 ./call.out
+# ../architecture-tools/sim ./call.out ./call.trace
+# ../src/sim ./call.out ./call.trace
+# echo ""
 
 # echo ">>> Testing push_pop.."
 # ../architecture-tools/asm ./push_pop.x64 ./push_pop.out
@@ -89,3 +96,10 @@ echo ""
 # ../architecture-tools/sim ./movq_bug.out movq_bug.trace
 # ../src/sim ./movq_bug.out ./movq_bug.trace
 # echo ""
+
+echo ">>> Testing arithmetic_test.."
+../architecture-tools/asm ./arithmetic_test.x64
+../architecture-tools/asm ./arithmetic_test.x64 ./arithmetic_test.out
+../architecture-tools/sim ./arithmetic_test.out arithmetic_test.trace
+../src/sim ./arithmetic_test.out ./arithmetic_test.trace
+echo ""
