@@ -1,0 +1,38 @@
+Quicksort i assembler er let at optimere
+
+Matrixmult er sværere
+Vores største matrix fylder 50*50*8byte
+Hvor mange kilobytes?
+
+Der er plads til hele vores 50*50*8byte i L2, men ikke i L1
+
+Vi kan fjerne referencen til memory. 
+
+Overvej at akkumulere i et register i stedet
+Gem til sidst i memory
+
+mat1 kan beregnes én gang
+Overvej at omdanne multiplikation til addition
+
+x=dim*8
+y=0
+addr1) = mat1 * ...
+y+=x
+
+Overvej unrolling, så man kører flere iterationer af en løkke amtidig
+if (dim>=5)
+	for(k=0; k<dim-5;k+=5)
+		acc+=mat1[i][k]
+		acc+=mat1[i][k+1]
+
+Men bemærk at den kun kan køre for 5 adgangen og man derfor må have den almindelige for løkke til at køre de sidste 4 iterationer
+
+Block-tiling
+Partiel beregning af en blok ad gangen. Så kan man få en mindre matrice, som kan passe ned i L1 cache
+Dekomposition af en matrix
+
+Målinger:
+nxn		# cykler
+10x10	40647
+15x15	132220
+20x20	306772

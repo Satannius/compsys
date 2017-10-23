@@ -1,0 +1,38 @@
+Measuring guide
+
+We are going to measure the performance of
+- matrixmult-big.x64
+- heapsort.x64
+- heapsort-2.x64
+- mergesort.x64
+
+# matrixmult-big.x64
+1) Open matrixmult-big.x64
+2) Modify line 82 accordingly for each matrix to be tested n x n
+dim:
+    .quad 50
+
+The quad specifies the dimensions of the matrix.
+3) Assemble the .x64-file using
+
+cd examples
+../architecture-tools/asm file.x64 file.out
+
+4) Run the program on the specified machine
+Machine 1
+../architecture-tools/sim file.out -m
+
+Machine 2
+../architecture-tools/sim file.out -m -pw=4
+
+Machine 3
+../architecture-tools/sim file.out -m -pw=4 -ooo
+
+# heapsort.x64
+Heapsort explained: https://www.youtube.com/watch?v=MtQL_ll5KhQ
+1) Open heapsort.x64
+2) Modify line 139 accordingly for each table to be sorted.
+data_size:
+    .quad 10000
+
+The quad specifies the size of the table.
