@@ -84,11 +84,11 @@ l3:                     //          for (k = 0; ...) {
     jne l1              //  }    // Jump to 11, if k is not equal to dim.
     ret
 
-    .pos 0x400              // Set stack pointer
+    .pos 0x600              // Set stack pointer
 stack:
 
 dim:
-    .quad 10
+    .quad 50
 mat1:
     .rand 1234 2500
 mat2:
