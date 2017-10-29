@@ -85,7 +85,7 @@ l3:                     //          for (j = 0; ...) {
 stack:
 
 dim:
-    .quad 30
+    .quad 50
 mat1:
     .rand 1234 2500
 mat2:
