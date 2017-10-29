@@ -21,27 +21,6 @@
 //
 //     for (i = 0; i < dim; i++)                        <--- l1:
 //     {
-//         for (j = 0; j < dim; j++)                    <--- l2:
-//         {
-//             sum = 0;
-//
-//             for (k = 0; k < dim; k++)                <--- l3:
-//             {
-//                 sum += mat1[i][k] * mat2[k][j];
-//             }
-//
-//             out[i][j] = sum;
-//         }
-//     }
-// }
-//
-//
-// void multiply(int dim, int mat1[dim][dim], int mat2[dim][dim], int out[dim][dim])
-// {
-//     int i, j, k;                                     <--- %rbx, %rax, %r9
-//
-//     for (i = 0; i < dim; i++)                        <--- l1:
-//     {
 //         for (k = 0; k < dim; k++)                    <--- l2:
 //         {
 //             r = A[i][k];
