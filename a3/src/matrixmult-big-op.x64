@@ -35,60 +35,78 @@
 //     }
 // }
 //
+//
+// void multiply(int dim, int mat1[dim][dim], int mat2[dim][dim], int out[dim][dim])
+// {
+//     int i, j, k;                                     <--- %rbx, %rax, %r9
+//
+//     for (i = 0; i < dim; i++)                        <--- l1:
+//     {
+//         for (k = 0; k < dim; k++)                    <--- l2:
+//         {
+//             r = A[i][k];
+//
+//             for (j = 0; j < dim; j++)                <--- l3:
+//             {
+//                 out[i][j] += r * mat2[k][j];
+//             }
+//         }
+//     }
+// }
+//
 multiply:
-    movq $0, %rbx
+    movq $0, %rbx           // Initialize i = 0
 l1:                     //  for (i = 0; ...) {
-    movq $0, %rax
-l2:                     //     for (j = 0; ...) {
+    movq $0, %r9           // Initialize k = 0
+l2:                     //     for (k = 0; ...) {
     movq %rbx, %r10         // Get current i-value
-    mulq %rdi, %r10         // Multiply k-value by dim and save to r10
-    addq %rax, %r10         // Add current j-value to r10
-    mulq %r15, %r10         // Multiply r10 by 8 (some byte-offset) from r15
-    addq %rcx, %r10         //
-    movq $0, %r14       //      sum = 0;
-    movq $0, %r9            // Initialize k value with 0
-l3:                     //          for (k = 0; ...) {
-    movq %rbx, %r11         // Get current i-value
-    mulq %rdi, %r11         // Multiply k-value by dim and save to r11
-    addq %r9, %r11          // Add current j-value to r11
-    mulq %r15, %r11         // Multiply r11 by 8 (some byte-offset) from r15
+    mulq %rdi, %r10         // Multiply i-value by dim and save to r10
+    addq %r9, %r10          // Add current k-value to r10
+    mulq %r15, %r10         // Multiply i by 8 (some byte-offset) from r15
+    addq %rsi, %r10         // Add adress of mat1 to r10
+    movq (%r10), %r14       //      r = mat1[i][k];
     //
-    addq %rsi, %r11         // Compute matrix index as memory-address + index
-    movq (%r11), %r12       // %r12 = mat1[i][k];
-    //
+    movq $0, %rax            // Initialize j = 0
+l3:                     //          for (j = 0; ...) {
     movq %r9, %r11          // Get current k-value
     mulq %rdi, %r11         // Multiply k-value by dim and save to r11
     addq %rax, %r11         // Add current j-value to r11
-    mulq %r15, %r11         // Multiply r11 by 8 (some byte-offset) from r15
+    mulq %r15, %r11         // Multiply r11 by 8 (byte-offset) from r15
     //
-    addq %rdx, %r11         // Compute matrix index as memory-address + index
+    addq %rdx, %r11         // Compute matrix index as memory-address + index (k*dim+j)
     movq (%r11), %r13       // %r13 = mat2[k][j];
     //
-    mulq %r12, %r13         // Multiply value at mat1[i][k] and [mat2[k][j] and save to r13
-    addq %r13, %r14         // %r14 = %r12 * %r13
-    //                  //              sum += mat1[i][k] * mat2[k][j]
-
-    addq %r8, %r9       //              k += 1;
-    cmpq %r9, %rdi          // Compare k to the dimensions of the matrix.
-    jne l3              //          } // Jump to 13, if k is not equal to dim.
     //
-    addq %rcx, %r10
-    movq %r14, (%r10)   //          out[i][j] = sum
+    mulq %r14, %r13         // Multiply r (value at mat1[i][k]) by mat2[k][j]
+    //                  //              = r * mat2[k][j]
     //
-    addq %r8, %rax      //          j += 1;
-    cmpq %rax, %rdi         // Compare k to the dimensions of the matrix.
-    jne l2              //      } // Jump to 12, if k is not equal to dim.
+    movq %rbx, %r11         // Get current i-value
+    mulq %rdi, %r11         // Multiply i-value by dim and save to r11
+    addq %rax, %r11         // Add current j-value to r11
+    mulq %r15, %r11         // Multiply r11 by 8 (some byte-offset) from r15
+    //
+    addq %rcx, %r11         // Compute matrix index as memory-address + index (i*dim+j) //
+    movq %r13, (%r11)   // out[i][j] = r *mat2[k][j];
+    //
+    //
+    addq %r8, %rax       //              j += 1;
+    cmpq %rax, %rdi          // Compare j to the dimensions of the matrix.
+    jne l3              //          } // Jump to l3, if j is not equal to dim.
+    //
+    addq %r8, %r9      //          k += 1;
+    cmpq %r9, %rdi         // Compare k to the dimensions of the matrix.
+    jne l2              //      } // Jump to l2, if k is not equal to dim.
     //
     addq %r8, %rbx      //      i += 1;
-    cmpq %rbx, %rdi         // Compare k to the dimensions of the matrix.
-    jne l1              //  }    // Jump to 11, if k is not equal to dim.
+    cmpq %rbx, %rdi         // Compare i to the dimensions of the matrix.
+    jne l1              //  }    // Jump to l1, if i is not equal to dim.
     ret
 
     .pos 0x600              // Set stack pointer
 stack:
 
 dim:
-    .quad 50
+    .quad 30
 mat1:
     .rand 1234 2500
 mat2:
