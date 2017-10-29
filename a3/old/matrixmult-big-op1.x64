@@ -1,0 +1,96 @@
+//
+// Tempelkoderne, 2017
+//
+// Matrixmult-big-opt.x64
+//
+    .pos 0
+    movq stack, %rsp            // Set up the stack pointer.
+    movq $1, %r8                // %r8 = 1. Used to increment counters in for-loops.
+    movq $0, %r14               // %r14 = 0. Used to
+    movq $8, %r15               // %r15 = 8
+    movq mat1, %rsi             // Address of mat1 saved in rsi
+    movq mat2, %rdx             // Address of mat2 saved in rsi
+    movq out, %rcx              // Adress of out saved in rcx
+    movq dim(%r14), %rdi        // Load dimension into RDI.
+    call multiply
+    hlt
+//
+// void multiply(int dim, int mat1[dim][dim], int mat2[dim][dim], int out[dim][dim])
+// {
+//     int i, j, k;                                     <--- %rbx, %rax, %r9
+//
+//     for (i = 0; i < dim; i++)                        <--- l1:
+//     {
+//         for (j = 0; j < dim; j++)                    <--- l2:
+//         {
+//             sum = 0;
+//
+//             for (k = 0; k < dim; k++)                <--- l3:
+//             {
+//                 sum += mat1[i][k] * mat2[k][j];
+//             }
+//
+//             out[i][j] = sum;
+//         }
+//     }
+// }
+//
+multiply:
+    movq $0, %rbx
+l1:                     //  for (i = 0; ...) {
+    movq $0, %rax
+l2:                     //     for (j = 0; ...) {
+    movq %rbx, %r10         // Get current i-value
+    mulq %rdi, %r10         // Multiply k-value by dim and save to r10
+    addq %rax, %r10         // Add current j-value to r10
+    mulq %r15, %r10         // Multiply r10 by 8 (some byte-offset) from r15
+    addq %rcx, %r10         //
+    movq $0, %r14       //      sum = 0;
+    movq $0, %r9            // Initialize k value with 0
+l3:                     //          for (k = 0; ...) {
+    movq %rbx, %r11         // Get current i-value
+    mulq %rdi, %r11         // Multiply k-value by dim and save to r11
+    addq %r9, %r11          // Add current j-value to r11
+    mulq %r15, %r11         // Multiply r11 by 8 (some byte-offset) from r15
+    //
+    addq %rsi, %r11         // Compute matrix index as memory-address + index
+    movq (%r11), %r12       // %r12 = mat1[i][k];
+    //
+    movq %r9, %r11          // Get current k-value
+    mulq %rdi, %r11         // Multiply k-value by dim and save to r11
+    addq %rax, %r11         // Add current j-value to r11
+    mulq %r15, %r11         // Multiply r11 by 8 (some byte-offset) from r15
+    //
+    addq %rdx, %r11         // Compute matrix index as memory-address + index
+    movq (%r11), %r13       // %r13 = mat2[k][j];
+    //
+    mulq %r12, %r13         // Multiply value at mat1[i][k] and [mat2[k][j] and save to r13
+    addq %r13, %r14         // %r14 = %r12 * %r13
+    //                  //              sum += mat1[i][k] * mat2[k][j]
+
+    addq %r8, %r9       //              k += 1;
+    cmpq %r9, %rdi          // Compare k to the dimensions of the matrix.
+    jne l3              //          } // Jump to 13, if k is not equal to dim.
+    //
+    addq %rcx, %r10
+    movq %r14, (%r10)   //          out[i][j] = sum
+    //
+    addq %r8, %rax      //          j += 1;
+    cmpq %rax, %rdi         // Compare k to the dimensions of the matrix.
+    jne l2              //      } // Jump to 12, if k is not equal to dim.
+    //
+    addq %r8, %rbx      //      i += 1;
+    cmpq %rbx, %rdi         // Compare k to the dimensions of the matrix.
+    jne l1              //  }    // Jump to 11, if k is not equal to dim.
+    ret
+
+    .pos 0x600              // Set stack pointer
+stack:
+
+dim:
+    .quad 50
+mat1:
+    .rand 1234 2500
+mat2:
+    .rand 1234 2500
+out:
