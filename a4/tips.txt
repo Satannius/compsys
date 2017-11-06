@@ -1,0 +1,8 @@
+Tips fra Victor
+
+Vi skal udfylde stream struct -> se hints i opgaven.
+Muligvis en god idé at gøre først.
+
+En transducer skal passerer argumenter videre til en given funktion.
+
+Brug forks til at lave child processer
