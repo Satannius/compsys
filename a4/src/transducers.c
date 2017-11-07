@@ -36,21 +36,19 @@ int transducers_link_source(stream **out,
   // out=out; /* unused */
   // s=s; /* unused */
   // arg=arg; /* unused */
-  
+  printf("sizeof(stream) = %d\n", sizeof(stream));
   // Create new stream.
-  stream ns[1];
+  stream * str = malloc(sizeof(stream));
+  // stream str[1];
   // Assign stream to pointer.
-  out = ns;
+  *out = str;
+
+  printf("str: %lx\n", str);
+  printf("out: %lx\n", out);
+  printf("*out: %lx\n", *out);
 
   // Pass value of arg to source function with new stream
-  s(arg,out);
-
-  printf("ns: %lx\n", ns);
-  printf("out: %lx\n", out);
-  // printf("File initialized? %lx\n", ns[0]->f);
-  // printf("Stream available? %ld\n", ns[0]->open);
-  // printf("Value at ns[0] is %ld", out[0]);
-  // printf("Value at ns[1] is %ld", out[1]);
+  s(arg,&str);
 
   /* Forking */
   // int pid;
@@ -68,7 +66,7 @@ int transducers_link_source(stream **out,
   /* Parent */
   // else
   // {
-  //   // Wait for child process
+  //   // Wait for child process?
   //   wait(NULL);
   //   pid_t parid = getpid();
   //   printf("This is parent %ld\n", (long)parid);
