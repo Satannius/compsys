@@ -7,7 +7,8 @@
 #include <string.h>
 
 void string_stream(const void *arg, FILE *out) {
-  printf("string_stream arg: %lx, out: %lx\n", arg, *out);
+  printf("string_stream:\n");
+  printf("  arg: %s, out: %lx\n", arg, out);
   fputs((const char*) arg, out);
 }
 
@@ -26,11 +27,15 @@ int main() {
   char *input = "Hello, World!";
   // char *output = malloc(strlen(input)+1);
   // output[strlen(input)] = '\0'; /* Ensure terminating NULL. */
-  printf("test99.c s: %lx\n", *s);
+  printf("test99.c\n");
+  printf("  s: %lx\n", s);
+  printf("  &s: %lx\n", &s);
 
   assert(transducers_link_source(&s[0], string_stream, input) == 0); // Laver en stream i s[0], med indholdet af string_stream(input)
 
-  printf("test99.c s: %lx\n", *s);
+  printf("test99.c\n");
+  printf("  *s: %lx\n", s);
+  printf("  &s: %lx\n", &s);
 
   return 0;
 }
