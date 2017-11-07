@@ -48,15 +48,12 @@ int transducers_link_source(stream **out,
   // out=out; /* unused */
   // s=s; /* unused */
   // arg=arg; /* unused */
-
+  printf("transducers_link_source\n");
   // Create new stream.
   struct stream * str = malloc(sizeof(struct stream));
   
   // Set *out to new stream address
   *out = str;
-
-  // Create pipes from stream
-  file_pipe(*out);
 
   // Fork
   int pid;
@@ -68,6 +65,9 @@ int transducers_link_source(stream **out,
     pid_t pid = getpid();
     pid_t ppid = getppid();
     printf("This is child %ld with parent %ld\n", (long)pid, (long)ppid);
+    
+    // Create pipes from stream
+    file_pipe(*out);
 
     printf("tls:\n");
     // printf("filepipe(*out): %d\n", file_pipe(*out));
@@ -79,10 +79,9 @@ int transducers_link_source(stream **out,
     printf("  *out: %lx\n", *out);
     // printf("  **out: %lx\n", **out);
     // printf("  &out: %lx\n", &out);
-    
     // Pass value of arg to source function with new stream
     s(arg,*out);
-    exit(0); // SPØRG: Skal child exit'e?
+    // exit(0); // SPØRG: Skal child exit'e?
   }
   /* Parent */
   else
@@ -109,10 +108,17 @@ int transducers_link_source(stream **out,
 // Skal ikke være asynkron.
 int transducers_link_sink(transducers_sink s, void *arg,
                           stream *in) {
-  s=s; /* unused */
-  arg=arg; /* unused */
-  in=in; /* unused */
-  return 1;
+  // s=s; /* unused */
+  // arg=arg; /* unused */
+  // in=in; /* unused */
+  printf("transducers_link_sink\n");
+  printf("  arg: %lx\n", arg);
+  printf("  &arg: %lx\n", &arg);
+  printf("  in: %lx\n", in);
+  printf("  *in: %lx\n", *in);
+  printf("  &in: %lx\n", &in);
+  s(arg,*in->f);
+  return 0;
 }
 
 int transducers_link_1(stream **out,
