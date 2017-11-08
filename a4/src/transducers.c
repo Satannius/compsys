@@ -3,7 +3,7 @@
 #include <unistd.h> // Used for getpid()
 
 struct stream {
-  FILE* f[2]; // File pointer
+  FILE* f; // File pointer
   // int open; // = 1 if file is in use / unavailable. = 0 if file is NOT in use / available.
 };
 
@@ -12,15 +12,19 @@ static int file_pipe(FILE* files[2]) {
   int fds[2];
   int r = pipe(fds);
   if (r == 0) {
+    printf("files: %lx\n", files);
     files[0] = fdopen(fds[0], "r");
     files[1] = fdopen(fds[1], "w");
     if (files[0] && files[1]) {
       return 0;
-    } else {
+    } 
+    else {
       return 1;
-}
-} else {
-return r; }
+    }
+  } 
+  else {
+    return r;
+  }
 }
 
 // Should contain a FILE* pointer and a flag indicating whether the stream already has a reader.
@@ -45,29 +49,34 @@ void transducers_free_stream(stream *s) {
 // Læs op på pipe og fork.
 int transducers_link_source(stream **out,
                             transducers_source s, const void *arg) {
-  // out=out; /* unused */
-  // s=s; /* unused */
-  // arg=arg; /* unused */
   printf("transducers_link_source\n");
-  // Create new stream.
-  struct stream * str = malloc(sizeof(struct stream));
   
-  // Set *out to new stream address
-  *out = str;
+  struct stream * str = malloc(sizeof(struct stream)); // Create new stream.
+  *out = str; // Set *out to new stream address
+  int fp = file_pipe(*out); // Create pipes from stream
 
-  // Fork
-  int pid;
+  if (fp == -1)
+  {
+    perror("Err: file_pipe() failed.");
+    exit(1);
+  }
+  
+  int pid; // Fork
   pid = fork();
   
-  /* Child */
-  if (pid == 0)
+  if (pid == -1)
+  {
+    perror("Err: fork() failed.");
+    exit(1);
+  }
+
+  if (pid == 0) /* Child */
   {
     pid_t pid = getpid();
     pid_t ppid = getppid();
-    printf("This is child %ld with parent %ld\n", (long)pid, (long)ppid);
+    printf("This is child %ld\n", (long)pid);
     
-    // Create pipes from stream
-    file_pipe(*out);
+    fclose(out[1]);
 
     printf("tls:\n");
     // printf("filepipe(*out): %d\n", file_pipe(*out));
@@ -80,15 +89,16 @@ int transducers_link_source(stream **out,
     // printf("  **out: %lx\n", **out);
     // printf("  &out: %lx\n", &out);
     // Pass value of arg to source function with new stream
-    s(arg,*out);
-    // exit(0); // SPØRG: Skal child exit'e?
+    
+    s(arg,out[0]);
+    exit(0); // SPØRG: Skal child exit'e?
   }
   /* Parent */
   else
   {
     pid_t parid = getpid();
     printf("This is parent %ld\n", (long)parid);
-
+    fclose(out[0]);
     printf("tls:\n");
     // printf("filepipe(*out): %d\n", file_pipe(*out));
     printf("  str: %lx\n", str);
@@ -105,7 +115,6 @@ int transducers_link_source(stream **out,
   return 0;
 }
 
-// Skal ikke være asynkron.
 int transducers_link_sink(transducers_sink s, void *arg,
                           stream *in) {
   // s=s; /* unused */
@@ -117,7 +126,9 @@ int transducers_link_sink(transducers_sink s, void *arg,
   printf("  in: %lx\n", in);
   printf("  *in: %lx\n", *in);
   printf("  &in: %lx\n", &in);
-  s(arg,*in->f);
+  wait(NULL);
+  // Brug waitpid. Vi skal muligvis også reape børnene, hvis de er zombier.
+  s(arg,in->f[0]);
   return 0;
 }
 
