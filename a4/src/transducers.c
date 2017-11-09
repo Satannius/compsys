@@ -81,11 +81,42 @@ int transducers_link_sink(transducers_sink s, void *arg,
 int transducers_link_1(stream **out,
                        transducers_1 t, const void *arg,
                        stream* in) {
-  out=out; /* unused */
-  t=t; /* unused */
-  arg=arg; /* unused */
-  in=in; /* unused */
-  return 1;
+  struct stream * str = malloc(sizeof(stream)); // Create new stream.
+  *out = str;
+  FILE* files[2];
+  int fp = file_pipe(files); // Create pipes from stream
+
+  if (fp == -1)
+  {
+    perror("Err: file_pipe() failed.");
+    return 1;
+  }
+  
+  pid_t pid; // Fork
+  pid = fork();
+  
+  if (pid == -1)
+  {
+    perror("Err: fork() failed.");
+    return 1;
+  }
+
+  if (pid == 0) /* Child */
+  {
+    fclose(files[0]);   // Close read-port.
+    // typedef void (*transducers_1)(const void *arg, FILE *out, FILE *in);
+    t(arg,files[1],in->f);    // Write to write-port via source_function
+    fclose(files[1]);   // Close write-port.
+    exit(0);
+  }
+  else /* Parent */
+  {
+    fclose(files[1]);   // Close write-port.
+    str->f = files[0];  // Read from read-port.
+    str->open = 1;      // Set flag.
+  }
+
+  return 0;
 }
 
 int transducers_link_2(stream **out,
