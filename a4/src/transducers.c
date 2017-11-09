@@ -4,7 +4,7 @@
 
 struct stream {
   FILE* f; // File pointer
-  // int open; // = 1 if file is in use / unavailable. = 0 if file is NOT in use / available.
+  int open; // = 1 if file is in use / unavailable. = 0 if file is NOT in use / available.
 };
 
 /* file_pipe */
@@ -14,10 +14,6 @@ static int file_pipe(FILE* files[2]) {
   if (r == 0) {
     files[0] = fdopen(fds[0], "r");
     files[1] = fdopen(fds[1], "w");
-    printf("file_pipe:\n");
-    printf("  files: %lx\n", files);
-    printf("  files[0]: %lx\n", files[0]);
-    printf("  files[1]: %lx\n", files[1]);
     if (files[0] && files[1]) {
       return 0;
     } 
@@ -32,90 +28,44 @@ static int file_pipe(FILE* files[2]) {
 
 // Should contain a FILE* pointer and a flag indicating whether the stream already has a reader.
 void transducers_free_stream(stream *s) {
-  // s=s; /* unused */
-  // s->open = 0; // Set flag to available.
   // Kill any children?
+  s->open = 0; // Set flag to available.
 }
 
-/* Create a source and a stream for its output. */
-// The transducers_link_source() function will create a new stream object and 
-// write its address to the given pointer variable.
-// Should use fork() to create a new process for running the given function.
-// Pipes should be used for communicating between processes.
-// The source function must be passed the value of the arg parameter.
-// The out parameter is a pointer to a pointer.
-// Skal være asynkron. Funktionspointeren skal kaldes i baggrunden, så transduceren kan returnere med det samme.
-// Skal returnere en stream struct med det samme. Den har stream **out
-// stream * str = malloc(sizeof(stream)) giver en ny stream
-// Vi kan evt. sætte filen til noget.
-// Pointeren overskrives med *out = stream;
-// Læs op på pipe og fork.
 int transducers_link_source(stream **out,
                             transducers_source s, const void *arg) {
-  printf("transducers_link_source\n");
-  
-  struct stream * str = malloc(sizeof(struct stream)); // Create new stream.
-  *out = str; // Set *out to new stream address
+  struct stream * str = malloc(sizeof(stream)); // Create new stream.
+  *out = str;
   FILE* files[2];
   int fp = file_pipe(files); // Create pipes from stream
 
   if (fp == -1)
   {
     perror("Err: file_pipe() failed.");
-    exit(1);
+    return 1;
   }
   
-  int pid; // Fork
+  pid_t pid; // Fork
   pid = fork();
   
   if (pid == -1)
   {
     perror("Err: fork() failed.");
-    exit(1);
+    return 1;
   }
 
   if (pid == 0) /* Child */
   {
-    pid_t pid = getpid();
-    printf("This is child %ld\n", (long)pid);
-    
-    fclose(files[0]);
-
-    printf("tls_child:\n");
-    // printf("filepipe(*out): %d\n", file_pipe(*out));
-    printf("  str: %lx\n", str);
-    printf("  *out: %lx\n", *out);
-    // printf("  FILE* f: %lx\n", &str->f);
-    // printf("  *str: %lx\n", *str);
-    // printf("  &str: %lx\n", &str);
-    // printf("  out: %lx\n", out);
-    // printf("  **out: %lx\n", **out);
-    // printf("  &out: %lx\n", &out);
-    
-    // Pass value of arg to source function with new stream
-    s(arg,files[1]);
-    str->f = files[1];
-    printf("  str->f: %lx\n", str->f);
-    printf("  *out: %lx\n", *out);
-    printf("  **out: %lx\n", **out);
+    fclose(files[0]);   // Close read-port.
+    s(arg,files[1]);    // Write to write-port via source_function
+    fclose(files[1]);   // Close write-port.
     exit(0);
   }
-  /* Parent */
-  else
+  else /* Parent */
   {
-    pid_t parid = getpid();
-    printf("This is parent %ld\n", (long)parid);
-    fclose(files[1]);
-    printf("tls_parent:\n");
-    printf("  str: %lx\n", str);
-    printf("  *out: %lx\n", *out);
-    // printf("  FILE* f: %lx\n", &str->f);
-    // printf("  *str: %lx\n", *str);
-    // printf("  &str: %lx\n", &str);
-    // printf("  out: %lx\n", out);
-    // printf("  **out: %lx\n", **out);
-    // printf("  &out: %lx\n", &out);
-    // exit(0);
+    fclose(files[1]);   // Close write-port.
+    str->f = files[0];  // Read from read-port.
+    str->open = 1;      // Set flag.
   }
 
   return 0;
@@ -123,20 +73,8 @@ int transducers_link_source(stream **out,
 
 int transducers_link_sink(transducers_sink s, void *arg,
                           stream *in) {
-  // s=s; /* unused */
-  // arg=arg; /* unused */
-  // in=in; /* unused */
-  wait(NULL);
-  printf("transducers_link_sink\n");
-  printf("  arg: %lx\n", arg);
-  printf("  &arg: %lx\n", &arg);
-  printf("  in: %lx\n", in);
-  printf("  *in: %lx\n", *in);
-  printf("  &in: %lx\n", &in);
-  printf("  in->f: %lx\n", in->f);
-  // Brug waitpid evt?
-  s(arg,in->f);
-  // Set flag. Luk streams. Ryd memory?
+  s(arg,in->f);   // 
+  // Skal link_sink gøre andet?
   return 0;
 }
 
