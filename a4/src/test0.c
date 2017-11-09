@@ -7,16 +7,12 @@
 #include <string.h>
 
 void string_stream(const void *arg, FILE *out) {
-  printf("string_stream:\n");
-  printf("  arg: %s, out: %lx\n", arg, out);
   fputs((const char*) arg, out);
 }
 
 void save_stream(void *arg, FILE *in) {
   /* We will be writing bytes to this location. */
   unsigned char *d = arg;
-  printf("save_stream:\n");
-  printf("  arg: %lx, in: %lx\n", arg, in);
 
   while (fread(d, sizeof(unsigned char), 1, in) == 1) {
     d++; /* Move location ahead by one byte. */
@@ -29,17 +25,14 @@ int main() {
   char *input = "Hello, World!";
   char *output = malloc(strlen(input)+1);
   output[strlen(input)] = '\0'; /* Ensure terminating NULL. */
-
+  
   assert(transducers_link_source(&s[0], string_stream, input) == 0); // Laver en stream i s[0], med indholdet af string_stream(input)
-  assert(transducers_link_sink(save_stream, output, &s[0]) == 0); // Bruger save_stream til at skrive fra s[0] til output
+  assert(transducers_link_sink(save_stream, output, s[0]) == 0); // Bruger save_stream til at skrive fra s[0] til output
 
-  printf("test0:\n");
-  printf("  input: %s\n", input);
-  printf("  output: %s\n", output);
   /* We cannot use the '==' operator for comparing strings, as strings
      in C are just pointers.  Using '==' would compare the _addresses_
      of the two strings, which is not what we want. */
-  // assert(strcmp(input,output) == 0);
+  assert(strcmp(input,output) == 0);
 
   /* Note the sizeof()-trick to determine the number of elements in
      the array.  This *only* works for statically allocated arrays,
