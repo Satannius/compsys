@@ -12,9 +12,12 @@ static int file_pipe(FILE* files[2]) {
   int fds[2];
   int r = pipe(fds);
   if (r == 0) {
-    printf("files: %lx\n", files);
     files[0] = fdopen(fds[0], "r");
     files[1] = fdopen(fds[1], "w");
+    printf("file_pipe:\n");
+    printf("  files: %lx\n", files);
+    printf("  files[0]: %lx\n", files[0]);
+    printf("  files[1]: %lx\n", files[1]);
     if (files[0] && files[1]) {
       return 0;
     } 
@@ -53,7 +56,8 @@ int transducers_link_source(stream **out,
   
   struct stream * str = malloc(sizeof(struct stream)); // Create new stream.
   *out = str; // Set *out to new stream address
-  int fp = file_pipe(*out); // Create pipes from stream
+  FILE* files[2];
+  int fp = file_pipe(files); // Create pipes from stream
 
   if (fp == -1)
   {
@@ -73,40 +77,42 @@ int transducers_link_source(stream **out,
   if (pid == 0) /* Child */
   {
     pid_t pid = getpid();
-    pid_t ppid = getppid();
     printf("This is child %ld\n", (long)pid);
     
-    fclose(out[1]);
+    fclose(files[0]);
 
-    printf("tls:\n");
+    printf("tls_child:\n");
     // printf("filepipe(*out): %d\n", file_pipe(*out));
     printf("  str: %lx\n", str);
+    printf("  *out: %lx\n", *out);
     // printf("  FILE* f: %lx\n", &str->f);
     // printf("  *str: %lx\n", *str);
     // printf("  &str: %lx\n", &str);
     // printf("  out: %lx\n", out);
-    printf("  *out: %lx\n", *out);
     // printf("  **out: %lx\n", **out);
     // printf("  &out: %lx\n", &out);
-    // Pass value of arg to source function with new stream
     
-    s(arg,out[0]);
-    exit(0); // SPØRG: Skal child exit'e?
+    // Pass value of arg to source function with new stream
+    s(arg,files[1]);
+    str->f = files[1];
+    printf("  str->f: %lx\n", str->f);
+    printf("  *out: %lx\n", *out);
+    printf("  **out: %lx\n", **out);
+    exit(0);
   }
   /* Parent */
   else
   {
     pid_t parid = getpid();
     printf("This is parent %ld\n", (long)parid);
-    fclose(out[0]);
-    printf("tls:\n");
-    // printf("filepipe(*out): %d\n", file_pipe(*out));
+    fclose(files[1]);
+    printf("tls_parent:\n");
     printf("  str: %lx\n", str);
+    printf("  *out: %lx\n", *out);
     // printf("  FILE* f: %lx\n", &str->f);
     // printf("  *str: %lx\n", *str);
     // printf("  &str: %lx\n", &str);
     // printf("  out: %lx\n", out);
-    printf("  *out: %lx\n", *out);
     // printf("  **out: %lx\n", **out);
     // printf("  &out: %lx\n", &out);
     // exit(0);
@@ -120,15 +126,17 @@ int transducers_link_sink(transducers_sink s, void *arg,
   // s=s; /* unused */
   // arg=arg; /* unused */
   // in=in; /* unused */
+  wait(NULL);
   printf("transducers_link_sink\n");
   printf("  arg: %lx\n", arg);
   printf("  &arg: %lx\n", &arg);
   printf("  in: %lx\n", in);
   printf("  *in: %lx\n", *in);
   printf("  &in: %lx\n", &in);
-  wait(NULL);
-  // Brug waitpid. Vi skal muligvis også reape børnene, hvis de er zombier.
-  s(arg,in->f[0]);
+  printf("  in->f: %lx\n", in->f);
+  // Brug waitpid evt?
+  s(arg,in->f);
+  // Set flag. Luk streams. Ryd memory?
   return 0;
 }
 
