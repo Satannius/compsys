@@ -194,7 +194,7 @@ int transducers_dup(stream **out1, stream **out2,
   int fp1 = file_pipe(files1); // Create pipes from stream
   int fp2 = file_pipe(files2);
 
-  if ( fp2 || fp1 != 0) {
+  if ( fp2 != 0 || fp1 != 0) {
     return 1;
   }
 
