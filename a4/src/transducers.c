@@ -157,7 +157,6 @@ int transducers_link_2(stream **out,
 
   if (fp != 0)
   {
-    perror("Err: file_pipe() failed.");
     return 1;
   }
   
@@ -166,7 +165,6 @@ int transducers_link_2(stream **out,
   
   if (pid == -1)
   {
-    perror("Err: fork() failed.");
     return 1;
   }
 
@@ -211,7 +209,6 @@ int transducers_dup(stream **out1, stream **out2,
 
   if ( fp2 ||fp1 == 0)
   {
-    perror("Err: file_pipe() failed.");
     return 1;
   }
 
@@ -220,7 +217,6 @@ int transducers_dup(stream **out1, stream **out2,
 
   if (pid == -1)
   {
-    perror("Err: fork() failed.");
     return 1;
   }
 
