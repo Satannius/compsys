@@ -74,6 +74,10 @@ int transducers_link_sink(transducers_sink s, void *arg,
   {
     return 1;
   }
+  else
+  {
+    in->open = 1;
+  }
   s(arg,in->f);
   // Skal link_sink gøre andet?
   return 0;
@@ -130,6 +134,16 @@ int transducers_link_1(stream **out,
 int transducers_link_2(stream **out,
                        transducers_2 t, const void *arg,
                        stream* in1, stream* in2) {
+  if (in1->open == 1 || in2->open == 1)
+  {
+    return 1;
+  }
+  else
+  {
+    in1->open = 1;
+    in2->open = 1;
+  }
+
   FILE* files[2];
   int fp = file_pipe(files); // Create pipes from stream
 

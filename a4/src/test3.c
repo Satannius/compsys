@@ -10,18 +10,6 @@ void string_stream(const void *arg, FILE *out) {
   fputs((const char*) arg, out);
 }
 
-void increment_stream(const void *arg, FILE *out, FILE *in) {
-  int d = *(int*)arg;
-
-  unsigned char c;
-  while (fread(&c, sizeof(unsigned char), 1, in) == 1) {
-    c += d;
-    if (fwrite(&c, sizeof(unsigned char), 1, out) != 1) {
-      break;
-    }
-  }
-}
-
 void save_stream(void *arg, FILE *in) {
   /* We will be writing bytes to this location. */
   unsigned char *d = arg;
