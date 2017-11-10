@@ -74,6 +74,10 @@ int transducers_link_sink(transducers_sink s, void *arg,
   {
     return 1;
   }
+  else
+  {
+    in->open = 1;
+  }
   s(arg,in->f);
   // Skal link_sink gøre andet?
   return 0;
@@ -130,6 +134,16 @@ int transducers_link_1(stream **out,
 int transducers_link_2(stream **out,
                        transducers_2 t, const void *arg,
                        stream* in1, stream* in2) {
+  if (in1->open == 1 || in2->open == 1)
+  {
+    return 1;
+  }
+  else
+  {
+    in1->open = 1;
+    in2->open = 1;
+  }
+
   struct stream * str = malloc(sizeof(stream)); // Create new stream.
   *out = str;
   FILE* files[2];
@@ -161,7 +175,7 @@ int transducers_link_2(stream **out,
   {
     fclose(files[1]);   // Close write-port.
     str->f = files[0];  // Read from read-port.
-    str->open = 1;      // Set flag.
+    str->open = 0;
   }
 
   return 0;
