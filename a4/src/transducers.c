@@ -28,7 +28,6 @@ static int file_pipe(FILE* files[2]) {
 
 // Should contain a FILE* pointer and a flag indicating whether the stream already has a reader.
 void transducers_free_stream(stream *s) {
-  // Kill any children?
   s->open = 0; // Set flag to available.
 }
 
@@ -41,7 +40,6 @@ int transducers_link_source(stream **out,
 
   if (fp == -1)
   {
-    perror("Err: file_pipe() failed.");
     return 1;
   }
   
@@ -50,7 +48,6 @@ int transducers_link_source(stream **out,
   
   if (pid == -1)
   {
-    perror("Err: fork() failed.");
     return 1;
   }
 
@@ -65,7 +62,7 @@ int transducers_link_source(stream **out,
   {
     fclose(files[1]);   // Close write-port.
     str->f = files[0];  // Read from read-port.
-    str->open = 1;      // Set flag.
+    str->open = 0;      // Set stream to available.
   }
 
   return 0;
@@ -73,7 +70,11 @@ int transducers_link_source(stream **out,
 
 int transducers_link_sink(transducers_sink s, void *arg,
                           stream *in) {
-  s(arg,in->f);   // 
+  if (in->open == 1)
+  {
+    return 1;
+  }
+  s(arg,in->f);
   // Skal link_sink gøre andet?
   return 0;
 }
@@ -81,6 +82,15 @@ int transducers_link_sink(transducers_sink s, void *arg,
 int transducers_link_1(stream **out,
                        transducers_1 t, const void *arg,
                        stream* in) {
+  if (in->open == 1)
+  {
+    return 1;
+  }
+  else
+  {
+    in->open = 1;
+  }
+  
   struct stream * str = malloc(sizeof(stream)); // Create new stream.
   *out = str;
   FILE* files[2];
@@ -88,7 +98,6 @@ int transducers_link_1(stream **out,
 
   if (fp == -1)
   {
-    perror("Err: file_pipe() failed.");
     return 1;
   }
   
@@ -97,7 +106,6 @@ int transducers_link_1(stream **out,
   
   if (pid == -1)
   {
-    perror("Err: fork() failed.");
     return 1;
   }
 
@@ -113,7 +121,7 @@ int transducers_link_1(stream **out,
   {
     fclose(files[1]);   // Close write-port.
     str->f = files[0];  // Read from read-port.
-    str->open = 1;      // Set flag.
+    str->open = 0;      // Set stream to available.
   }
 
   return 0;
