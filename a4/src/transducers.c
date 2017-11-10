@@ -1,5 +1,6 @@
 #include "transducers.h"
 #include <sys/types.h> // Used for getpid(). Not necessary to include this one explicitly.
+#include <stdlib.h>
 #include <unistd.h> // Used for getpid()
 
 struct stream {
@@ -28,7 +29,8 @@ static int file_pipe(FILE* files[2]) {
 
 // Should contain a FILE* pointer and a flag indicating whether the stream already has a reader.
 void transducers_free_stream(stream *s) {
-  s->open = 0; // Set flag to available.
+  // s->open = 0; // Set flag to available.
+  free(s);
 }
 
 int transducers_link_source(stream **out,
@@ -38,7 +40,7 @@ int transducers_link_source(stream **out,
   FILE* files[2];
   int fp = file_pipe(files); // Create pipes from stream
 
-  if (fp == -1)
+  if (fp != 0)
   {
     return 1;
   }
@@ -70,7 +72,7 @@ int transducers_link_source(stream **out,
 
 int transducers_link_sink(transducers_sink s, void *arg,
                           stream *in) {
-  if (in->open == 1)
+  if (in->open == 1) // Check that stream in is not in use.
   {
     return 1;
   }
@@ -86,7 +88,7 @@ int transducers_link_sink(transducers_sink s, void *arg,
 int transducers_link_1(stream **out,
                        transducers_1 t, const void *arg,
                        stream* in) {
-  if (in->open == 1)
+  if (in->open == 1) // Check that stream in is not in use.
   {
     return 1;
   }
@@ -100,7 +102,7 @@ int transducers_link_1(stream **out,
   FILE* files[2];
   int fp = file_pipe(files); // Create pipes from stream
 
-  if (fp == -1)
+  if (fp != 0)
   {
     return 1;
   }
@@ -134,13 +136,20 @@ int transducers_link_1(stream **out,
 int transducers_link_2(stream **out,
                        transducers_2 t, const void *arg,
                        stream* in1, stream* in2) {
-  if (in1->open == 1 || in2->open == 1)
+  if (in1->open == 1) // Check that stream in1 is not in use.
   {
     return 1;
   }
   else
   {
     in1->open = 1;
+  }
+  if (in2->open == 1) // Check that stream in2 is not in use. Also ensures in1 != in2.
+  {
+    return 1;
+  }
+  else
+  {
     in2->open = 1;
   }
 
@@ -149,7 +158,7 @@ int transducers_link_2(stream **out,
   FILE* files[2];
   int fp = file_pipe(files); // Create pipes from stream
 
-  if (fp == -1)
+  if (fp != 0)
   {
     perror("Err: file_pipe() failed.");
     return 1;
