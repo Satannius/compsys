@@ -20,23 +20,15 @@ void save_stream(void *arg, FILE *in) {
 }
 
 int main() {
-  stream* s[3];
+  stream* s[2];
 
   char *input = "Hello, World!";
-  char *output1 = malloc(strlen(input)+1);
-  char *output2 = malloc(strlen(input)+1);
-  output1[strlen(input)] = '\0'; /* Ensure terminating NULL. */
-  output2[strlen(input)] = '\0'; /* Ensure terminating NULL. */
+  char *output = malloc(strlen(input)+1);
+  output[strlen(input)] = '\0'; /* Ensure terminating NULL. */
 
   assert(transducers_link_source(&s[0], string_stream, input) == 0);
-  assert(transducers_link_sink(save_stream, output1, s[1]) == 0);
-  assert(transducers_link_sink(save_stream, output2, s[2]) == 0);
-  assert(transducers_dup(&s[1], &s[2], s[0]) == 0);
-  /* We cannot use the '==' operator for comparing strings, as strings
-     in C are just pointers.  Using '==' would compare the _addresses_
-     of the two strings, which is not what we want. */
-  assert(strcmp(input,output1) == 0);
-  assert(strcmp(input,output2) == 0);
+  assert(transducers_link_sink(save_stream, output, s[0]) == 0);
+  assert(transducers_dup(&s[1], &s[2], s[0]) == 1);
 
   /* Note the sizeof()-trick to determine the number of elements in
      the array.  This *only* works for statically allocated arrays,
