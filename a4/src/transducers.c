@@ -188,10 +188,68 @@ int transducers_link_2(stream **out,
   return 0;
 }
 
+
 int transducers_dup(stream **out1, stream **out2,
                     stream *in) {
-  out1=out1; /* unused */
-  out2=out2; /* unused */
-  in=in; /* unused */
-  return 1;
+  if (in->open == 1)
+  {
+    return 1;
+  }
+  else
+  {
+    in->open = 1;
+  }
+  struct stream * str1 = malloc(sizeof(stream));
+  struct stream * str2 = malloc(sizeof(stream));
+  *out1 = str1;
+  *out2 = str2;                    
+  FILE* files1[2];
+  FILE* files2[2];
+  
+  int fp1 = file_pipe(files1); // Create pipes from stream
+  int fp2 = file_pipe(files2);
+
+  if ( fp2 ||fp1 == -1)
+  {
+    perror("Err: file_pipe() failed.");
+    return 1;
+  }
+
+  pid_t pid; // Fork
+  pid = fork();
+
+  if (pid == -1)
+  {
+    perror("Err: fork() failed.");
+    return 1;
+  }
+
+  if (pid == 0) /* Child */
+  {
+    fclose(files1[0]);   // Close read-port.
+    fclose(files2[0]);
+
+    unsigned char d; 
+    while (fread(&d, sizeof(unsigned char), 1, (*in).f ) == 1) {
+      if (fwrite(&d, sizeof(unsigned char), 1, files1[1] ) != 1 ){
+        break;
+      } 
+      if (fwrite(&d, sizeof(unsigned char), 1, files2[1] ) != 1 ){
+        break;
+      }       
+    }
+    
+    fclose(files1[1]);   // Close write-port.
+    fclose(files2[1]);
+    exit(0);
+  }
+  else /* Parent */
+  {
+    fclose(files1[1]);   // Close write-port.
+    fclose(files2[1]); 
+    str1->f = files1[0];  // Read from read-port.
+    str2->f = files2[0];  // Read from read-port.
+  }  
+return 0;
+
 }
