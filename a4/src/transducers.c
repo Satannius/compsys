@@ -39,16 +39,14 @@ int transducers_link_source(stream **out,
   FILE* files[2];
   int fp = file_pipe(files); // Create pipes from stream
 
-  if (fp != 0)
-  {
+  if (fp != 0) {
     return 1;
   }
   
   pid_t pid; // Fork
   pid = fork();
   
-  if (pid == -1)
-  {
+  if (pid == -1) {
     return 1;
   }
 
@@ -71,28 +69,26 @@ int transducers_link_source(stream **out,
 
 int transducers_link_sink(transducers_sink s, void *arg,
                           stream *in) {
-  if (in->open == 1) // Check that stream in is not in use.
-  {
+  // Check that stream in is not in use.
+  if (in->open == 1) {
     return 1;
   }
-  else
-  {
+  else {
     in->open = 1;
   }
   s(arg,in->f);
-  // Skal link_sink gøre andet?
+
   return 0;
 }
 
 int transducers_link_1(stream **out,
                        transducers_1 t, const void *arg,
                        stream* in) {
-  if (in->open == 1) // Check that stream in is not in use.
-  {
+  // Check that stream in is not in use.
+  if (in->open == 1) {
     return 1;
   }
-  else
-  {
+  else {
     in->open = 1;
   }
   
@@ -101,23 +97,20 @@ int transducers_link_1(stream **out,
   FILE* files[2];
   int fp = file_pipe(files); // Create pipes from stream
 
-  if (fp != 0)
-  {
+  if (fp != 0) {
     return 1;
   }
   
   pid_t pid; // Fork
   pid = fork();
   
-  if (pid == -1)
-  {
+  if (pid == -1) {
     return 1;
   }
 
   if (pid == 0) /* Child */
   {
     fclose(files[0]);   // Close read-port.
-    // typedef void (*transducers_1)(const void *arg, FILE *out, FILE *in);
     t(arg,files[1],in->f);    // Write to write-port via source_function
     fclose(files[1]);   // Close write-port.
     exit(0);
@@ -135,44 +128,38 @@ int transducers_link_1(stream **out,
 int transducers_link_2(stream **out,
                        transducers_2 t, const void *arg,
                        stream* in1, stream* in2) {
-  if (in1->open == 1) // Check that stream in1 is not in use.
-  {
+  // Check that stream in1 is not in use.
+  if (in1->open == 1) {
     return 1;
   }
-  else
-  {
+  else {
     in1->open = 1;
   }
-  if (in2->open == 1) // Check that stream in2 is not in use. Also ensures in1 != in2.
-  {
+  // Check that stream in2 is not in use. Also ensures in1 != in2.
+  if (in2->open == 1) {
     return 1;
   }
-  else
-  {
+  else {
     in2->open = 1;
   }
 
   FILE* files[2];
   int fp = file_pipe(files); // Create pipes from stream
 
-  if (fp != 0)
-  {
+  if (fp != 0) {
     return 1;
   }
   
   pid_t pid; // Fork
   pid = fork();
   
-  if (pid == -1)
-  {
+  if (pid == -1) {
     return 1;
   }
 
   if (pid == 0) /* Child */
   {
     fclose(files[0]);   // Close read-port.
-    /* typedef void (*transducers_2)
-    (const void *arg, FILE *out, FILE *in1, FILE *in2); */
     t(arg,files[1],in1->f,in2->f);    // Write to write-port via source_function
     fclose(files[1]);   // Close write-port.
     exit(0);
@@ -189,12 +176,10 @@ int transducers_link_2(stream **out,
 
 int transducers_dup(stream **out1, stream **out2,
                     stream *in) {
-  if (in->open == 1)
-  {
+  if (in->open == 1) {
     return 1;
   }
-  else
-  {
+  else {
     in->open = 1;
   }
   struct stream * str1 = malloc(sizeof(stream));
@@ -207,16 +192,14 @@ int transducers_dup(stream **out1, stream **out2,
   int fp1 = file_pipe(files1); // Create pipes from stream
   int fp2 = file_pipe(files2);
 
-  if ( fp2 ||fp1 == 0)
-  {
+  if ( fp2 || fp1 == 0) {
     return 1;
   }
 
   pid_t pid; // Fork
   pid = fork();
 
-  if (pid == -1)
-  {
+  if (pid == -1) {
     return 1;
   }
 
@@ -227,10 +210,10 @@ int transducers_dup(stream **out1, stream **out2,
 
     unsigned char d; 
     while (fread(&d, sizeof(unsigned char), 1, (*in).f ) == 1) {
-      if (fwrite(&d, sizeof(unsigned char), 1, files1[1] ) != 1 ){
+      if (fwrite(&d, sizeof(unsigned char), 1, files1[1] ) != 1 ) {
         break;
       } 
-      if (fwrite(&d, sizeof(unsigned char), 1, files2[1] ) != 1 ){
+      if (fwrite(&d, sizeof(unsigned char), 1, files2[1] ) != 1 ) {  
         break;
       }       
     }
