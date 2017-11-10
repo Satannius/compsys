@@ -29,7 +29,6 @@ static int file_pipe(FILE* files[2]) {
 
 // Should contain a FILE* pointer and a flag indicating whether the stream already has a reader.
 void transducers_free_stream(stream *s) {
-  // s->open = 0; // Set flag to available.
   free(s);
 }
 
