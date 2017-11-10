@@ -55,5 +55,7 @@ int main() {
     transducers_free_stream(s[i]);
   }
 
+  free(output);
+
   return 0;
 }

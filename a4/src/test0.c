@@ -43,5 +43,7 @@ int main() {
     transducers_free_stream(s[i]); // Læs hints. Det er noget med at sætte et flag i struct, så der står at filen er ledig/optaget.
   }
 
+  free(output);
+
   return 0;
 }

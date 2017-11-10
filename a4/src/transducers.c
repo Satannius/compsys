@@ -62,9 +62,10 @@ int transducers_link_source(stream **out,
     fclose(files[1]);   // Close write-port.
     str->f = files[0];  // Read from read-port.
     str->open = 0;      // Set stream to available.
+    return 0;
   }
 
-  return 0;
+  return 1;
 }
 
 int transducers_link_sink(transducers_sink s, void *arg,
@@ -120,9 +121,10 @@ int transducers_link_1(stream **out,
     fclose(files[1]);   // Close write-port.
     str->f = files[0];  // Read from read-port.
     str->open = 0;      // Set stream to available.
+    return 0;
   }
 
-  return 0;
+  return 1;
 }
 
 int transducers_link_2(stream **out,
@@ -192,7 +194,7 @@ int transducers_dup(stream **out1, stream **out2,
   int fp1 = file_pipe(files1); // Create pipes from stream
   int fp2 = file_pipe(files2);
 
-  if ( fp2 || fp1 == 0) {
+  if ( fp2 || fp1 != 0) {
     return 1;
   }
 
