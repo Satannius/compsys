@@ -152,8 +152,6 @@ int transducers_link_2(stream **out,
     in2->open = 1;
   }
 
-  struct stream * str = malloc(sizeof(stream)); // Create new stream.
-  *out = str;
   FILE* files[2];
   int fp = file_pipe(files); // Create pipes from stream
 
@@ -175,16 +173,17 @@ int transducers_link_2(stream **out,
   if (pid == 0) /* Child */
   {
     fclose(files[0]);   // Close read-port.
+    /* typedef void (*transducers_2)
+    (const void *arg, FILE *out, FILE *in1, FILE *in2); */
     t(arg,files[1],in1->f,in2->f);    // Write to write-port via source_function
     fclose(files[1]);   // Close write-port.
     exit(0);
   }
-  else /* Parent */
-  {
-    fclose(files[1]);   // Close write-port.
-    str->f = files[0];  // Read from read-port.
-    str->open = 0;
-  }
+
+  fclose(files[1]);      
+  struct stream * str = malloc(sizeof(stream)); // Create new stream.
+  *out = str;
+  str->f = files[0];  // Read from read-port.
 
   return 0;
 }
