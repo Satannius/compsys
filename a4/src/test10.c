@@ -36,6 +36,8 @@ int main() {
   for (int i = 0; i < (int)(sizeof(s)/sizeof(s[0])); i++) {
     transducers_free_stream(s[i]);
   }
+  
+  free(output);
 
   return 0;
 }
