@@ -205,11 +205,11 @@ int transducers_dup(stream **out1, stream **out2,
   *out2 = str2;                    
   FILE* files1[2];
   FILE* files2[2];
-  
+
   int fp1 = file_pipe(files1); // Create pipes from stream
   int fp2 = file_pipe(files2);
 
-  if ( fp2 ||fp1 == -1)
+  if ( fp2 ||fp1 == 0)
   {
     perror("Err: file_pipe() failed.");
     return 1;
