@@ -230,6 +230,8 @@ int transducers_dup(stream **out1, stream **out2,
     fclose(files2[1]); 
     str1->f = files1[0];  // Read from read-port.
     str2->f = files2[0];  // Read from read-port.
+    str1->open = 0;
+    str2->open = 0;
   }  
 return 0;
 
