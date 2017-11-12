@@ -43,14 +43,9 @@ int main() {
   assert(transducers_link_sink(save_stream, output, s[0]) == 0);
   assert(transducers_link_1(&s[1], increment_stream, &inc, s[0]) == 1);
 
-  /* Note the sizeof()-trick to determine the number of elements in
-     the array.  This *only* works for statically allocated arrays,
-     *not* ones created by malloc(). */
-  for (int i = 0; i < (int)(sizeof(s)/sizeof(s[0])); i++) {
-    transducers_free_stream(s[i]);
-  }
+  transducers_free_stream(s[0]);
 
   free(output);
-
+  
   return 0;
 }
