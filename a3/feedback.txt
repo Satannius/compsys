@@ -1,0 +1,9 @@
+Well done. Just a few comments:
+
+Good measurements and constant finding. I don't mind the measuring of instructions but I find it less relevant than the cycles. Using the instructions as an argument for the running time is not necessarily the best option.
+
+While both your new sorting and matrix multiplication programs are faster, they unfortunately don't work correctly. Still, your thought process and method of making them faster is okay, so you still get points for that.
+
+Otherwise clear and concise report, good job.
+
+PS: Michael tells me you submitted late. I have not taken this into consideration in my assessement, but Michael might when giving points.
