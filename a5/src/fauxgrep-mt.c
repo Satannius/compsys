@@ -1,5 +1,6 @@
 // Setting _DEFAULT_SOURCE is necessary to activate visibility of
 // certain header file contents on GNU/Linux systems.
+// Run using E.G. ./fauxgrep-mt return .
 #define _DEFAULT_SOURCE
 
 #include <stdio.h>
@@ -51,7 +52,9 @@ int main(int argc, char * const *argv) {
     paths = &argv[2];
   }
 
-  assert(0); // Initialise the job queue and some worker threads here.
+  // assert(0); // Initialise the job queue and some worker threads here.
+  struct job_queue jq;
+  job_queue_init(&jq, 64);
 
   // FTS_LOGICAL = follow symbolic links
   // FTS_NOCHDIR = do not change the working directory of the process
