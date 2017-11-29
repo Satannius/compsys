@@ -4,9 +4,7 @@
 
 #include "job_queue.h"
 
-int job_queue_init(struct job_queue *job_queue, int capacity) {
-  // void * buf = malloc((capacity * sizeof(void*)));
-  
+int job_queue_init(struct job_queue *job_queue, int capacity) { 
   job_queue->capacity = capacity; // MAX
   job_queue->first    = 0;        // use_ptr
   job_queue->num_used = 0;        // count
@@ -27,24 +25,29 @@ int job_queue_destroy(struct job_queue *job_queue) {
   // If any threads are blocked on a call to job_queue_pop() when 
   // job_queue_destroy() is called, the threads must be woken with
   // job_queue_pop() returning -1
-  pthread_mutex_lock(&(job_queue->mutex));
+  printf("destroy-enter\n");
+  assert(pthread_mutex_lock(&(job_queue->mutex)) == 0);
+  
   if (job_queue->dead){
-    pthread_mutex_unlock(&(job_queue->mutex));
+    assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
   	return 1;
   }
+  // BUG: Destroy hænger her?
 
-  printf("destroy num_used: %d", job_queue->num_used);
+  printf("destroy num_used: %d\n", job_queue->num_used);
   while (job_queue->num_used > 0) {
-    // Fibs hænger her, da destroy ikke opdager, at num_used har nået 0
+    // Skal kunne håndtere tilfælde hvor num_used > 0 og der er færre pop end num_used eller ingen pop
+    // BUG:? Fibs hænger her, da destroy ikke opdager, at num_used har nået 0
     pthread_cond_wait (&(job_queue->cond), &(job_queue->mutex)); 
   }
-  printf("destroy\n");
+  printf("destroy-done waiting\n");
+  printf("destroy num_used: %d\n", job_queue->num_used);
   
   job_queue->dead = 1;
   free(job_queue->buffer);
-  pthread_cond_broadcast(&(job_queue->cond)); // Signal for pop-threads to die
+  assert(pthread_cond_broadcast(&(job_queue->cond)) == 0); // Signal for pop-threads to die
 
-  pthread_mutex_unlock(&(job_queue->mutex));
+  assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
 
   return 0;
 }
@@ -53,24 +56,27 @@ int job_queue_destroy(struct job_queue *job_queue) {
   // Skal sleepe, når condition siger, at der ikke kan pushes
   // (kø er fuld)
 int job_queue_push(struct job_queue *job_queue, void *data) {
-  pthread_mutex_lock(&(job_queue->mutex));
+  printf("push-enter\n");
+  assert(pthread_mutex_lock(&(job_queue->mutex)) == 0);
   if (job_queue->dead){
-    pthread_mutex_unlock(&(job_queue->mutex));
+    assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
   	return 1;
   }
 
+  printf("push num_used pre: %d\n", job_queue->num_used);
   while((job_queue->capacity == job_queue->num_used) && !(job_queue->dead)){
   	pthread_cond_wait (&(job_queue->cond), &(job_queue->mutex)); 
   }
-  printf("push\n");
+  printf("push-done waiting\n");
 
 
   int i = (job_queue->first + job_queue->num_used) % job_queue->capacity;
   job_queue->buffer[i] = data;
   job_queue->num_used++;
-  printf("push num_used: %d\n", job_queue->num_used);
+  printf("push num_used post: %d\n", job_queue->num_used);
+  assert(pthread_cond_broadcast(&(job_queue->cond)) == 0);
 
-  pthread_mutex_unlock(&(job_queue->mutex));
+  assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
 
   return 0;
 }
@@ -79,19 +85,20 @@ int job_queue_push(struct job_queue *job_queue, void *data) {
 // Skal sleepe, når condition siger, at der ikke kan poppes 
 // (intet i kø)
 int job_queue_pop(struct job_queue *job_queue, void **data) {
-  pthread_mutex_lock(&(job_queue->mutex));
+  printf("pop-enter\n");
+  assert(pthread_mutex_lock(&(job_queue->mutex)) == 0);
   if (job_queue->dead) {
-    pthread_mutex_unlock(&(job_queue->mutex));
+    assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
     return 1;
   }
   printf("pop num_used: %d\n", job_queue->num_used);
   while((job_queue->num_used == 0) && !(job_queue->dead)){
-    pthread_cond_wait (&(job_queue->cond), &(job_queue->mutex)); 
+    pthread_cond_wait (&(job_queue->cond), &(job_queue->mutex));
   }
-  printf("pop\n");
+  printf("pop-done waiting\n");
 
   if (job_queue->dead == 1) {
-    pthread_mutex_unlock(&(job_queue->mutex));
+    assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
     return -1;
   }
 
@@ -105,6 +112,7 @@ int job_queue_pop(struct job_queue *job_queue, void **data) {
   
   job_queue->num_used--;
 
-  pthread_mutex_unlock(&(job_queue->mutex));
+  assert(pthread_cond_broadcast(&(job_queue->cond)) == 0);
+  assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
   return 0;
 }
