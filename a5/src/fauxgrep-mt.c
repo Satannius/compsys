@@ -26,8 +26,8 @@
 pthread_mutex_t stdout_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 struct arg_struct {
-    struct job_queue *jq;
-    char const *needle;
+  struct job_queue *jq;
+  char const *needle;
 };
 
 int fauxgrep_file(char const *needle, char const *path) {
@@ -68,7 +68,7 @@ void* worker(void *arg) {
   while (1) {
     char *path;
     if (job_queue_pop(jq, (void**)&path) == 0) {
-      fauxgrep_file((args->needle), path);
+      fauxgrep_file(args->needle, path);
       free(path);
     } else {
       // If job_queue_pop() returned non-zero, that means the queue is
