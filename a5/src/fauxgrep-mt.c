@@ -62,8 +62,6 @@ int fauxgrep_file(char const *needle, char const *path) {
 void* worker(void *arg) {
   struct arg_struct *args = (struct arg_struct *)arg;
   struct job_queue *jq = (args->jq);
-  printf("args->jq: %lx\n", &(args->jq));
-  printf("args->needle: %s\n", args->needle);
 
   while (1) {
     char *path;
@@ -147,9 +145,7 @@ int main(int argc, char * const *argv) {
     switch (p->fts_info) {
     case FTS_D:
       break;
-    case FTS_F:
-      printf("while: %lx\n", &jq);
-      
+    case FTS_F:     
       job_queue_push(&jq, (void*)strdup(p->fts_path));
       //assert(0); // Process the file p->fts_path, somehow.
       break;
