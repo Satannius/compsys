@@ -25,6 +25,7 @@ pthread_mutex_t stdout_mutex = PTHREAD_MUTEX_INITIALIZER;
 int global_histogram[8] = { 0 };
 
 int fhistogram(char const *path) {
+  assert(pthread_mutex_lock(&stdout_mutex) == 0);
   FILE *f = fopen(path, "r");
 
   int local_histogram[8] = { 0 };
@@ -51,7 +52,7 @@ int fhistogram(char const *path) {
 
   merge_histogram(local_histogram, global_histogram);
   print_histogram(global_histogram);
-
+  assert(pthread_mutex_unlock(&stdout_mutex) == 0);
   return 0;
 }
 
@@ -104,7 +105,7 @@ int main(int argc, char * const *argv) {
     paths = &argv[1];
   }
 
-  //assert(0); // Initialise the job queue and some worker threads here.
+  // Initialise the job queue and some worker threads here.
   struct job_queue jq;
   job_queue_init(&jq, 64);
 
@@ -136,9 +137,7 @@ int main(int argc, char * const *argv) {
     switch (p->fts_info) {
     case FTS_D:
       break;
-    case FTS_F:
-      printf("while: %lx\n", &jq);
-      
+    case FTS_F:    
       job_queue_push(&jq, (void*)strdup(p->fts_path));
       //assert(0); // Process the file p->fts_path, somehow.
       break;
