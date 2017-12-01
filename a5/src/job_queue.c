@@ -32,14 +32,14 @@ int job_queue_destroy(struct job_queue *job_queue) {
   	return 1;
   }
 
+  job_queue->dead = 1;
+  assert(pthread_cond_broadcast(&(job_queue->cond)) == 0); // Signal for pop-threads to die
   while (job_queue->num_used > 0) {
-    // Skal kunne håndtere tilfælde hvor num_used > 0 og der er færre pop end num_used eller ingen pop
     pthread_cond_wait (&(job_queue->cond), &(job_queue->mutex)); 
   }
   
-  job_queue->dead = 1;
   free(job_queue->buffer);
-  assert(pthread_cond_broadcast(&(job_queue->cond)) == 0); // Signal for pop-threads to die
+
 
   assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
 
@@ -60,32 +60,33 @@ int job_queue_push(struct job_queue *job_queue, void *data) {
   	pthread_cond_wait (&(job_queue->cond), &(job_queue->mutex)); 
   }
 
+  if (job_queue->dead == 1 && job_queue->num_used == 0) {
+    assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
+    return -1;
+  }
 
   int i = (job_queue->first + job_queue->num_used) % job_queue->capacity;
   job_queue->buffer[i] = data;
   job_queue->num_used++;
 
   assert(pthread_cond_broadcast(&(job_queue->cond)) == 0);
-
   assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
 
   return 0;
 }
 
-// Bruge mutex og cv
-// Skal sleepe, når condition siger, at der ikke kan poppes 
-// (intet i kø)
 int job_queue_pop(struct job_queue *job_queue, void **data) {
   assert(pthread_mutex_lock(&(job_queue->mutex)) == 0);
-  if (job_queue->dead) {
+  if (job_queue->dead && job_queue->num_used == 0) {
     assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
     return 1;
   }
+
   while((job_queue->num_used == 0) && !(job_queue->dead)){
     pthread_cond_wait (&(job_queue->cond), &(job_queue->mutex));
   }
 
-  if (job_queue->dead == 1) {
+  if (job_queue->dead == 1 && job_queue->num_used == 0) {
     assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
     return -1;
   }
@@ -99,7 +100,6 @@ int job_queue_pop(struct job_queue *job_queue, void **data) {
   }
   
   job_queue->num_used--;
-
   assert(pthread_cond_broadcast(&(job_queue->cond)) == 0);
   assert(pthread_mutex_unlock(&(job_queue->mutex)) == 0);
   return 0;
