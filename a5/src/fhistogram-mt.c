@@ -79,8 +79,8 @@ void* worker(void *arg) {
 
 
 int main(int argc, char * const *argv) {
-  if (argc < 2) {
-    err(1, "usage: paths...");
+  if ((argc != 2) && (argc != 4)) {
+    err(1, "usage: [-n INT] paths...");
     exit(1);
   }
 
