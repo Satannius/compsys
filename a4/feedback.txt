@@ -1,0 +1,35 @@
+Very well done! Nearly a perfect submission. Your implementation is good, your tests are good, your report is fine. I don't have much to say really.
+
+Your errant memory leak may be caused by you not closing your file in the free stream function.
+
+The below code can be shortened:
+int transducers_link_sink(transducers_sink s, void *arg,
+                          stream *in) {
+  // Check that stream in is not in use.
+  if (in->open == 1) {
+    return 1;
+  }
+  else {
+    in->open = 1;
+  }
+  s(arg,in->f);
+
+  return 0;
+}
+
+Shortened version:
+int transducers_link_sink(transducers_sink s, void *arg,
+                          stream *in) {
+  // Check that stream in is not in use.
+  if (in->open) {
+    return 1;
+  }
+
+  in->open = 1;
+  s(arg,in->f);
+  return 0;
+}
+
+Notice how there's no need to check a boolean for equality to 1 and that the else-block is redundant.
+
+Otherwise very good, keep it up.
