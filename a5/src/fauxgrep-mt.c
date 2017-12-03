@@ -80,7 +80,7 @@ void* worker(void *arg) {
 }
 
 int main(int argc, char * const *argv) {
-  if (argc < 2) {
+  if ((argc != 3) && (argc != 5)) {
     err(1, "usage: [-n INT] STRING paths...");
     exit(1);
   }
