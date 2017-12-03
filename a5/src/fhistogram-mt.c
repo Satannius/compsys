@@ -138,8 +138,8 @@ int main(int argc, char * const *argv) {
     case FTS_D:
       break;
     case FTS_F:    
+      // Process the file p->fts_path.
       job_queue_push(&jq, (void*)strdup(p->fts_path));
-      //assert(0); // Process the file p->fts_path, somehow.
       break;
     default:
       break;
