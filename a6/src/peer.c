@@ -1,13 +1,36 @@
 #include <stdio.h>
+#include "csapp.h"
 #include "peer.h"
 
-#define ARGNUM 0 // TODO: Put the number of you want to take
+#define ARGNUM 2 // TODO: Put the number of you want to take
 
-int main(int argc, char**argv) {
+/*
+ * Based on csapp echoclient.c - An echo client
+ */
+/* $begin echoclientmain */
+int main(int argc, char **argv) 
+{
+    int clientfd;
+    char *host, *port, buf[MAXLINE];
+    rio_t rio;
+
     if (argc != ARGNUM + 1) {
         printf("%s expects %d arguments.\n", (argv[0]+2), ARGNUM);
-        return(0);
+        fprintf(stderr, "usage: %s <host> <port>\n", argv[0]);
+	    exit(0);
     }
-    //TODO: Implement
-    return 0;
+    host = argv[1];
+    port = argv[2];
+
+    clientfd = Open_clientfd(host, port);
+    Rio_readinitb(&rio, clientfd);
+
+    while (Fgets(buf, MAXLINE, stdin) != NULL) {
+        Rio_writen(clientfd, buf, strlen(buf));
+	    Rio_readlineb(&rio, buf, MAXLINE);
+	    Fputs(buf, stdout);
+    }
+    Close(clientfd); //line:netp:echoclient:close
+    exit(0);
 }
+/* $end echoclientmain */
