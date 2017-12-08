@@ -19,3 +19,5 @@ a2/architecture-tools/
 *.zip
 
 a6/src/echoserveri
+
+a6/src/echoclient
