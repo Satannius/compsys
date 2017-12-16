@@ -1,0 +1,17 @@
+Well done. A few comments:
+
+	- Generally good implementation of the job queue API.
+
+	- Generally good job with the multithreaded programs, but there are some issues.
+
+	- You test with a very high amount of threads, which may we why you don't see much speed boost.
+
+	- You forget to free(threads) in both multithreaded programs.
+
+	- The bits processed is not supposed to change depending on how many threads work on it.
+
+	- The biggest mistake though is wrapping the whole important functions in mutex locks. You should only lock just before and just after your prints. The way you do it, two threads can't even work at the same time, kind of defeating the purpose of the whole concurrency in the first place.
+
+	- Report is fine but you could've touched on why you chose so many threads to test with, problems about testing performance of multithreaded programs and your memory management policy - what's allocated and who has the responsability to free it?
+
+Otherwise good.
