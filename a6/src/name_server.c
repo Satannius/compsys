@@ -19,82 +19,91 @@ static struct list user_list[2];
 void process_cmd(char input[], char output[])
 {
     const char s[2] = " ";
-    char reply[100] = "Hallo, Welt!\n"; // PLACEHOLDER
+    char reply[MAXLINE]; // PLACEHOLDER
     char *token;
     token = strtok(strdup(input), s);
     printf("First token: %s \n", token);
     
-    // if (strcmp(token, "/login") == 0){
-    //     // verify the user and password 
-    //     token = strtok(NULL, s);
-    //     for (int i = 0; i < USERNUM; i++){
-    //         if (user_list[i].logged_in == 1){
-    //             printf("This user is already logged in. \n");
-    //             break;
-    //         }
-    //         if (strcmp(token, user_list[i].name) == 0){
-    //             // continue with this user
-    //             printf("user %s is found. \n", user_list[i].name);
-    //             token = strtok(NULL, s);
-    //             if (strcmp(token, user_list[i].password) == 0){
-    //                 printf("Password is correct. \n");
-    //                 token = strtok(NULL, s);
-    //                 user_list[i].port = atoi (token);
-    //                 printf("port: %d \n", user_list[i].port);
-    //                 token = strtok(NULL, s);
-    //                 strcpy(user_list[i].ip, token);
-    //                 printf("IP: %s ", token);
-    //                 user_list[i].logged_in = 1;
-    //                 break;
-    //             }
-    //             else{
-    //                 printf("Invaild user or password. \n");
-    //                 break;
-    //             }
-    //         }
-    //     }
-    // } else if (strcmp(token, "/lookup\n") == 0){
-    //     int online = 0;
-    //     for (int i = 0; i < USERNUM; i++){
-    //         if (user_list[i].logged_in == 1)  
-    //             online++;
-    //     }
-    //     printf("People online: %i \n", online);
-    //     for (int i = 0; i < USERNUM; i++){
-    //         if (user_list[i].logged_in == 1){   
-    //             printf("looking up people \n");
-    //             printf("Nick: %s \n", user_list[i].name);
-    //             printf("Ip: %s", user_list[i].ip);
-    //             printf("port: %i \n", user_list[i].port);
-    //         }
-    //     }
-    // } else if (strcmp(token, "/lookup") == 0) {
-    //     token = strtok(NULL, s);
-    //     char *target = strtok(token, "\n");
-    //     printf("target: %s\n", target);
-    //     int found = 0;
-    //     for (int i = 0; i < USERNUM; i++){
-    //         if ((strcmp(user_list[i].name, target) == 0) && 
-    //             (user_list[i].logged_in == 1)){
-    //             found = 1;
-    //             printf("%s is online. \n", user_list[i].name);
-    //             printf("IP: %s\n", user_list[i].ip);
-    //             printf("Port: %i", user_list[i].port);
-    //         }
-    //         else if ((strcmp(user_list[i].name, target) == 0) && 
-    //                 (user_list[i].logged_in == 0)){
-    //             found = 1;
-    //             printf("%s is offline. \n", user_list[i].name);
-    //         }
-    //     }
-    //     if (found == 0)
-    //         printf("%s is not found. \n", target);
+    if (strcmp(token, "/login") == 0){
+        // verify the user and password 
+        token = strtok(NULL, s);
+        for (int i = 0; i < USERNUM; i++){
+            if (user_list[i].logged_in == 1){
+                sprintf(reply, "This user is already logged in. \n");
+                break;
+            }
+             if (strcmp(token, user_list[i].name) == 0){
+                // continue with this user
+                printf("user %s is found. \n", user_list[i].name);
+                token = strtok(NULL, s);
+                if (strcmp(token, user_list[i].password) == 0){
+                    printf("Password is correct. \n");
+                    token = strtok(NULL, s);
+                    user_list[i].port = atoi (token);
+                    printf("port: %d \n", user_list[i].port);
+                    token = strtok(NULL, s);
+                    strcpy(user_list[i].ip, token);
+                    printf("IP: %s ", token);
+                    user_list[i].logged_in = 1;
+                    break;
+                }
+                else{
+                    sprintf(reply, "Invaild user or password. \n");
+                    break;
+                }
+            }
+        }
+    } else if (strcmp(token, "/lookup\n") == 0){
+        int online = 0;
+        for (int i = 0; i < USERNUM; i++){
+            if (user_list[i].logged_in == 1)  
+                online++;
+        }
+        printf("People online: %i \n", online);
+        for (int i = 0; i < USERNUM; i++){
+            if (user_list[i].logged_in == 1){  
+                char output[MAXLINE]; 
+                strcpy(output, "looking up people  ");
+                strcat(reply, output);
+                sprintf(output, "Nick: %s ", user_list[i].name);
+                strcat(reply, output);
+                sprintf(output, "IP: %s", user_list[i].ip);
+                strcat(reply, output);
+                sprintf(output, "Port: %i ", user_list[i].port);
+                strcat(reply, output);
+            }
+        }
+    } else if (strcmp(token, "/lookup") == 0) {
+        token = strtok(NULL, s);
+        char *target = strtok(token, "\n");
+        printf("target: %s\n", target);
+        int found = 0;
+        for (int i = 0; i < USERNUM; i++){
+            if ((strcmp(user_list[i].name, target) == 0) && 
+                (user_list[i].logged_in == 1)){
+                found = 1;
+                char output[MAXLINE];
+                sprintf(output, "%s is online. \n", user_list[i].name);
+                strcat(reply, output);
+                sprintf(output, "IP: %s\n", user_list[i].ip);
+                strcat(reply, output);
+                sprintf(output, "Port: %i", user_list[i].port);
+                strcat(reply, output);
+            }
+            else if ((strcmp(user_list[i].name, target) == 0) && 
+                    (user_list[i].logged_in == 0)){
+                found = 1;
+                sprintf(reply, "%s is offline. \n", user_list[i].name);
+            }
+        }
+        if (found == 0)
+            sprintf(reply, "%s is not found. \n", target);
         
-    // } else {
-    //     printf("You can either log in or exit the program. \n");
-    // }
+        } else {
+            sprintf(reply, "You can either log in or exit the program. \n");
+    }
     
-    strcpy(output,reply); // Write reply via pointer to output
+    strcpy(output, reply); // Write reply via pointer to output
     printf("Received input: %s", input); // Notice if input contains linebreak
     printf("Writing %s to output\n", reply);
 }
@@ -103,7 +112,7 @@ void process_cmd(char input[], char output[])
  * Based on csapp echo - read and echo text lines until client closes connection
  */
 /* $begin echo */
-void echo(int connfd) 
+oid echo(int connfd) 
 {
     size_t n;
     char input_buf[MAXLINE];
@@ -131,7 +140,7 @@ void init_users() {
     strcpy(user_list[1].name, "fisk");
     strcpy(user_list[1].password, "654321");
     user_list[0].logged_in = 0;
-    user_list[1].logged_in = 0;
+    user_list[1].logged_in = 1;
 }
 
 int main(int argc, char**argv) {
