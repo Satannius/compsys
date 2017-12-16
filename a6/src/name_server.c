@@ -19,7 +19,7 @@ static struct list user_list[2];
 void process_cmd(char input[], char output[])
 {
     const char s[2] = " ";
-    char reply[100] = "Hallo, Welt!"; // PLACEHOLDER
+    char reply[100] = "Hallo, Welt!\n"; // PLACEHOLDER
     char *token;
     token = strtok(strdup(input), s);
     printf("First token: %s \n", token);
@@ -106,24 +106,20 @@ void process_cmd(char input[], char output[])
 void echo(int connfd) 
 {
     size_t n;
-    char buf[MAXLINE];
-    char input[100];
-    char output[100];
+    char input_buf[MAXLINE];
+    char output_buf[100];
     rio_t rio;
 
     Rio_readinitb(&rio, connfd);
-    while((n = Rio_readlineb(&rio, buf, MAXLINE)) != 0) { //line:netp:echo:eof
+    while((n = Rio_readlineb(&rio, input_buf, MAXLINE)) != 0) { //line:netp:echo:eof
 	    printf("server received %d bytes\n", (int)n);
 
-        strcpy(input,buf); // Copy buffer contents into input
-        process_cmd(input,output); // Process input and write to output
-	    Rio_writen(connfd, output, strlen(output)); // Write output to client
+        process_cmd(input_buf,output_buf); // Processes input and writes to output
+        Rio_writen(connfd, output_buf, strlen(output_buf));
 
-        Rio_writen(connfd, buf, n); // Echo after writing output or this wont work.
-        
-        // Flush additional buffers
-        memset(&input[0], 0, strlen(input));
-        memset(&output[0], 0, strlen(output));
+        // Flush buffers
+        memset(&input_buf[0], 0, strlen(input_buf));
+        memset(&output_buf[0], 0, strlen(output_buf));
     }
 }
 
