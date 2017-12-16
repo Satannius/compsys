@@ -18,8 +18,8 @@ static struct list user_list[2];
 
 void process_cmd(char input[], char output[])
 {
-    const char s[2] = " "; // delimiter
-    char reply[100] = "Hallo, Welt!";
+    const char s[2] = " ";
+    char reply[100] = "Hallo, Welt!"; // PLACEHOLDER
     char *token;
     token = strtok(strdup(input), s);
     printf("First token: %s \n", token);
@@ -94,8 +94,8 @@ void process_cmd(char input[], char output[])
     //     printf("You can either log in or exit the program. \n");
     // }
     
-    strcpy(output,reply);
-    printf("Received input: %s\n", input);
+    strcpy(output,reply); // Write reply via pointer to output
+    printf("Received input: %s", input); // Notice if input contains linebreak
     printf("Writing %s to output\n", reply);
 }
 
@@ -105,24 +105,25 @@ void process_cmd(char input[], char output[])
 /* $begin echo */
 void echo(int connfd) 
 {
-    size_t n; // For number of bytes received
+    size_t n;
     char buf[MAXLINE];
     char input[100];
     char output[100];
-    char message[50] = "Hello world.";
     rio_t rio;
 
     Rio_readinitb(&rio, connfd);
     while((n = Rio_readlineb(&rio, buf, MAXLINE)) != 0) { //line:netp:echo:eof
 	    printf("server received %d bytes\n", (int)n);
-        // strcpy(input,buf);
-        // process_cmd(input,output);
-	    // Rio_writen(connfd, buf, n);
-        // printf("Reply is: %s\n", output);
-        // Rio_writen(connfd, message, sizeof(message));
-        printf("Message is: %s\n", message);
-        // Rio_writen(connfd, output, sizeof(output));
-        Rio_writen(connfd, message, sizeof(message));
+
+        strcpy(input,buf); // Copy buffer contents into input
+        process_cmd(input,output); // Process input and write to output
+	    Rio_writen(connfd, output, strlen(output)); // Write output to client
+
+        Rio_writen(connfd, buf, n); // Echo after writing output or this wont work.
+        
+        // Flush additional buffers
+        memset(&input[0], 0, strlen(input));
+        memset(&output[0], 0, strlen(output));
     }
 }
 
