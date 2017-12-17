@@ -22,22 +22,24 @@ void login(char args[]) {
 
     clientfd = Open_clientfd(host, port);
 
-    // PERFORM SPECIAL HANDSHAKE
+    // 'SPECIAL' HANDSHAKE
     printf("'Special' handshaking...\n");
     Rio_readinitb(&rio, clientfd);            // Setup rio
     Rio_writen(clientfd, args, strlen(args)); // Send login args to server
     Rio_readlineb(&rio, buf, MAXLINE);        // Read reply
     if (!(strcmp(buf, "You are now logged in.\n") == 0)) {
-        Close(clientfd); // Close connection if reply not affirmative
+        printf("Failed.\n"); // Close connection if reply not affirmative
+	    Fputs(buf, stdout);      
+        Close(clientfd); 
         return;
     }
     printf("Succes!\n");
     Fputs(buf, stdout); // Print server reply to stdout
 
+    // Echo-like continuous, open connection
     while (Fgets(buf, MAXLINE, stdin) != NULL) {
         Rio_writen(clientfd, buf, strlen(buf)); // Send request
 	    Rio_readlineb(&rio, buf, MAXLINE);      // Read reply
-        // process_reply(buf);
 	    Fputs(buf, stdout);                     // Print reply
         if (process_reply(buf) == -1) {
             break;
