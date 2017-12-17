@@ -5,8 +5,7 @@
 #define ARGNUM 0 // TODO: Put the number of you want to take
 
 void login(char args[]) {
-    printf("Establishing connection ...");
-    printf("Received args: %s", args);
+    // printf("Received args: %s", args);
 
     int clientfd;
     char *host, *port, buf[MAXLINE];
@@ -16,9 +15,19 @@ void login(char args[]) {
     port = "10000";
 
     clientfd = Open_clientfd(host, port);
-    Rio_readinitb(&rio, clientfd);
+
 
     // PERFORM SPECIAL HANDSHAKE
+    Rio_writen(clientfd, args, strlen(args));
+    Rio_readinitb(&rio, clientfd);
+    Rio_readlineb(&rio, buf, MAXLINE);
+    if (strcmp(buf, "You are now logged in.\n") != 0) {
+        Close(clientfd);
+
+    }
+    Fputs(buf, stdout);
+    
+
     // If fails: break
 
     while (Fgets(buf, MAXLINE, stdin) != NULL) {
@@ -47,7 +56,7 @@ int main(int argc, char **argv)
     
     while (Fgets(buf, MAXLINE, stdin) != NULL) {
         token = strtok(strdup(buf), s);
-        printf("%s\n", token);
+        // printf("%s\n", token);
         
 	    // Fputs(buf, stdout); // Echo user input.
         if (strcmp(token, "/login") == 0){

@@ -110,7 +110,7 @@ void process_cmd(char input[], char output[])
  * Based on csapp echo - read and echo text lines until client closes connection
  */
 /* $begin echo */
-void echo(int connfd) 
+void echo(int connfd)
 {
     size_t n;
     char input_buf[MAXLINE];
@@ -119,10 +119,11 @@ void echo(int connfd)
 
     Rio_readinitb(&rio, connfd);
     while((n = Rio_readlineb(&rio, input_buf, MAXLINE)) != 0) { //line:netp:echo:eof
-	    printf("server received %d bytes\n", (int)n);
-
+	    // printf("server received %d bytes\n", (int)n);
+        printf("Bufsize: %ld", strlen(output_buf));
         process_cmd(input_buf,output_buf); // Processes input and writes to output
         Rio_writen(connfd, output_buf, strlen(output_buf));
+        printf("Bufsize: %ld", strlen(output_buf));
 
         // Flush buffers
         memset(&input_buf[0], 0, strlen(input_buf));
@@ -138,7 +139,7 @@ void init_users() {
     strcpy(user_list[1].name, "fisk");
     strcpy(user_list[1].password, "654");
     user_list[0].logged_in = 0;
-    user_list[1].logged_in = 1;
+    user_list[1].logged_in = 0;
 }
 
 int main(int argc, char**argv) {
@@ -171,13 +172,13 @@ int main(int argc, char**argv) {
 /* Thread routine */
 void *thread(void *vargp) 
 {
-    printf("Creating new thread.");
+    printf("Creating new thread.\n");
     int connfd = *((int *)vargp);
     Pthread_detach(pthread_self()); //line:conc:echoservert:detach
     Free(vargp);                    //line:conc:echoservert:free
     echo(connfd);
     Close(connfd);
-    printf("Closing thread.");
+    printf("Closing thread.\n");
     return NULL;
 }
 
