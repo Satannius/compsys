@@ -24,6 +24,11 @@ void login(struct list *usr_lst, char *token, char reply[], int *usr_id)
 {
     const char s[2] = " ";
     token = strtok(NULL, s);
+
+    if (*usr_id >= 0) {
+        sprintf(reply, "You are already logged in.");
+        return;
+    }
     
     for (int i = 0; i < USERNUM; i++) {
         // Ensure user is not already logged in.

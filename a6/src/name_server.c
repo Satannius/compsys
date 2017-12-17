@@ -29,10 +29,7 @@ void echo(int connfd)
 
     Rio_readinitb(&rio, connfd);
 
-    // Perform special handshake.
-
     while((n = Rio_readlineb(&rio, input_buf, MAXLINE)) != 0) { //line:netp:echo:eof
-	    // printf("server received %d bytes\n", (int)n);
         process_cmd(user_list, input_buf,output_buf,&usr_id); // Processes input and writes to output
         Rio_writen(connfd, output_buf, strlen(output_buf));
 
@@ -40,7 +37,7 @@ void echo(int connfd)
         memset(&input_buf[0], 0, strlen(input_buf));
         memset(&output_buf[0], 0, strlen(output_buf));
     }
-    if ((usr_id) >= 0) {
+    if ((usr_id) >= 0) { // Will be skipped, if login failed
         printf("User %s disconnected.\n", user_list[usr_id].name);
         user_list[usr_id].logged_in = 0;
     }
