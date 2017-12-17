@@ -29,29 +29,26 @@ void login(struct list *usr_lst, char *token, char reply[], int *usr_id)
         // Ensure user is not already logged in.
         if ((strcmp(token, usr_lst[i].name) == 0) && usr_lst[i].logged_in == 1) {
             sprintf(reply, "This user is already logged in.");
-            break;
+            return;
         }
-        // If user found and password correct, set values
+        // If user is found and password correct, set values
         if (strcmp(token, usr_lst[i].name) == 0) {
             token = strtok(NULL, s);
             if (strcmp(token, usr_lst[i].password) == 0) {
                 token = strtok(NULL, s);
-                usr_lst[i].port = atoi (token);
+                strcpy(usr_lst[i].ip, token);
                 token = strtok(NULL, s);
                 char *target = strtok(token, "\n");
-                strcpy(usr_lst[i].ip, target);
-                
+                usr_lst[i].port = atoi (target);
                 usr_lst[i].logged_in = 1;
-                *usr_id = i;
-                
+                *usr_id = i;  
                 sprintf(reply, "You are now logged in.");
-                break;
+                return;
             }
         }
-        // Error msg if no user matched or wrong pass
-        sprintf(reply, "Invaild nick or password.");
     }
-    
+    // Error msg if no user matched or wrong pass
+    sprintf(reply, "Invaild nick or password.");
     return;
 }
 
@@ -60,18 +57,19 @@ void lookup(struct list *usr_lst, char *token, char reply[])
     const char s[2] = " ";
     token = strtok(NULL, s);
     int online = 0;
+    // counts online users 
     for (int i = 0; i < USERNUM; i++) {
         if (usr_lst[i].logged_in == 1)  
             online++;
     }
     sprintf(reply, "People online: %i  ", online);
     char result[MAXLINE];
+    // write a reply with all online users' info
     for (int i = 0; i < USERNUM; i++) {
         if (usr_lst[i].logged_in == 1) {  
             sprintf(result, "Nick: %s, IP: %s, Port: %i ", 
                     usr_lst[i].name, usr_lst[i].ip, usr_lst[i].port);
             strcat(reply, result);
-            printf("reply[%i]: %s\n", i, reply);
         }    
     }
 }
@@ -80,26 +78,27 @@ void lookup_nick(struct list *usr_lst, char *token, char reply[])
 {
     const char s[2] = " ";
     token = strtok(NULL, s);
-        char *target = strtok(token, "\n");
-        printf("target: %s\n", target);
-        int found = 0;
-        for (int i = 0; i < USERNUM; i++) {
-            if ((strcmp(usr_lst[i].name, target) == 0) && 
-                (usr_lst[i].logged_in == 1)) {
-                found = 1;
-                sprintf(reply, "%s is online, IP: %s, Port: %i ",
-                        usr_lst[i].name, usr_lst[i].ip, usr_lst[i].port);
-                break;
-            }
-            else if ((strcmp(usr_lst[i].name, target) == 0) && 
-                    (usr_lst[i].logged_in == 0)) {
-                found = 1;
-                sprintf(reply, "%s is offline.", usr_lst[i].name);
-                break;
-            }
+    char *target = strtok(token, "\n");
+    int found = 0; // set to 1 if a match is found 
+    for (int i = 0; i < USERNUM; i++) {
+        if ((strcmp(usr_lst[i].name, target) == 0) && 
+            (usr_lst[i].logged_in == 1)) {
+            found = 1;
+            sprintf(reply, "%s is online, IP: %s, Port: %i ",
+                    usr_lst[i].name, usr_lst[i].ip, usr_lst[i].port);
+            return;
         }
-        if (found == 0)
-            sprintf(reply, "%s is not found.", target);
+        else if ((strcmp(usr_lst[i].name, target) == 0) && 
+                (usr_lst[i].logged_in == 0)) {
+            found = 1;
+            sprintf(reply, "%s is offline.", usr_lst[i].name);
+            return;
+        }
+    }
+    if (found == 0)
+        // Error msg if there is no match
+        sprintf(reply, "%s is not found.", target);
+        return;
         
 }
 
