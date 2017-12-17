@@ -2,11 +2,17 @@
 #include "csapp.h"
 #include "peer.h"
 
-#define ARGNUM 0 // TODO: Put the number of you want to take
+#define ARGNUM 0 // TODO: Put the number of args you want to take
+
+int process_reply(char input[])
+{   
+    if (strcmp(input, "You are now logged out.\n") == 0) {
+        return -1;
+    }
+    return 0;
+}
 
 void login(char args[]) {
-    // printf("Received args: %s", args);
-
     int clientfd;
     char *host, *port, buf[MAXLINE];
     rio_t rio;
@@ -16,32 +22,34 @@ void login(char args[]) {
 
     clientfd = Open_clientfd(host, port);
 
-
     // PERFORM SPECIAL HANDSHAKE
     printf("'Special' handshaking...\n");
     Rio_readinitb(&rio, clientfd);            // Setup rio
     Rio_writen(clientfd, args, strlen(args)); // Send login args to server
     Rio_readlineb(&rio, buf, MAXLINE);        // Read reply
-    if (!(strcmp(buf, "You are now online.\n") == 0)) {
+    if (!(strcmp(buf, "You are now logged in.\n") == 0)) {
         Close(clientfd); // Close connection if reply not affirmative
         return;
     }
     printf("Succes!\n");
-    Fputs(buf, stdout);
+    Fputs(buf, stdout); // Print server reply to stdout
 
     while (Fgets(buf, MAXLINE, stdin) != NULL) {
         Rio_writen(clientfd, buf, strlen(buf)); // Send request
 	    Rio_readlineb(&rio, buf, MAXLINE);      // Read reply
+        // process_reply(buf);
 	    Fputs(buf, stdout);                     // Print reply
+        if (process_reply(buf) == -1) {
+            break;
+        }
     }
     Close(clientfd); //line:netp:echoclient:close
     return;
 }
 
 /*
- * Based on csapp echoclient.c - An echo client
+ * Based on csapp echoclient.c - an echo client
  */
-/* $begin echoclientmain */
 int main(int argc, char **argv) 
 {
     if (argc != ARGNUM + 1) {
@@ -56,9 +64,7 @@ int main(int argc, char **argv)
     
     while (Fgets(buf, MAXLINE, stdin) != NULL) {
         token = strtok(strdup(buf), s);
-        // printf("%s\n", token);
-        
-	    // Fputs(buf, stdout); // Echo user input.
+
         if (strcmp(token, "/login") == 0){
             Fputs("Establishing connection ...\n", stdout);
             login(buf);
@@ -72,7 +78,5 @@ int main(int argc, char **argv)
         }
     }
     
-    
     exit(0);
 }
-/* $end echoclientmain */

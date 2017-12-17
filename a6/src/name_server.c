@@ -16,66 +16,70 @@ struct list{
 
 static struct list user_list[2];
 
-void process_cmd(char input[], char output[], int *usr_id)
+void login(char *token, char reply[], int *usr_id)
 {
+    // verify the user and password 
     const char s[2] = " ";
-    char reply[MAXLINE]; // PLACEHOLDER
-    char *token;
-    token = strtok(strdup(input), s);
-    memset(&reply[0], 0, sizeof(reply));
-    printf("First token: %s \n", token);
-    
-    if (strcmp(token, "/login") == 0){
-        // verify the user and password 
-        token = strtok(NULL, s);
-        for (int i = 0; i < USERNUM; i++){
-            if (user_list[i].logged_in == 1){
-                sprintf(reply, "This user is already logged in.");
+    token = strtok(NULL, s);
+    for (int i = 0; i < USERNUM; i++){
+        if (user_list[i].logged_in == 1){
+            sprintf(reply, "This user is already logged in.");
+            break;
+        }
+            if (strcmp(token, user_list[i].name) == 0){
+            // continue with this user
+            printf("user %s is found. \n", user_list[i].name);
+            token = strtok(NULL, s);
+            if (strcmp(token, user_list[i].password) == 0){
+                printf("Password is correct. \n");
+                token = strtok(NULL, s);
+                user_list[i].port = atoi (token);
+                printf("port: %d \n", user_list[i].port);
+                token = strtok(NULL, s);
+                char *target = strtok(token, "\n");
+                printf("target: %s\n", target);
+                strcpy(user_list[i].ip, target);
+                printf("IP: %s \n", target);
+                user_list[i].logged_in = 1;
+                *usr_id = i;
+                sprintf(reply, "You are now logged in.");
                 break;
             }
-             if (strcmp(token, user_list[i].name) == 0){
-                // continue with this user
-                printf("user %s is found. \n", user_list[i].name);
-                token = strtok(NULL, s);
-                if (strcmp(token, user_list[i].password) == 0){
-                    printf("Password is correct. \n");
-                    token = strtok(NULL, s);
-                    user_list[i].port = atoi (token);
-                    printf("port: %d \n", user_list[i].port);
-                    token = strtok(NULL, s);
-                    char *target = strtok(token, "\n");
-                    printf("target: %s\n", target);
-                    strcpy(user_list[i].ip, target);
-                    printf("IP: %s \n", target);
-                    user_list[i].logged_in = 1;
-                    *usr_id = i;
-                    sprintf(reply, "You are now online.");
-                    break;
-                }
-                else{
-                    sprintf(reply, "Invaild user or password.");
-                    break;
-                }
+            else
+            {
+                sprintf(reply, "Invaild user or password.");
+                break;
             }
         }
-    } else if (strcmp(token, "/lookup\n") == 0){
-        int online = 0;
-        for (int i = 0; i < USERNUM; i++){
-            if (user_list[i].logged_in == 1)  
-                online++;
-        }
-        printf("People online: %i \n", online);
-        char result[MAXLINE];
-        for (int i = 0; i < USERNUM; i++){
-            if (user_list[i].logged_in == 1){  
-                sprintf(result, "Nick: %s, IP: %s, Port: %i ", 
-                        user_list[i].name, user_list[i].ip, user_list[i].port);
-                strcat(reply, result);
-                printf("reply[%i]: %s\n", i, reply);
-            }    
-        }
-    } else if (strcmp(token, "/lookup") == 0) {
-        token = strtok(NULL, s);
+    }
+    return;
+}
+
+void lookup(char *token, char reply[])
+{
+    const char s[2] = " ";
+    token = strtok(NULL, s);
+    int online = 0;
+    for (int i = 0; i < USERNUM; i++) {
+        if (user_list[i].logged_in == 1)  
+            online++;
+    }
+    printf("People online: %i \n", online);
+    char result[MAXLINE];
+    for (int i = 0; i < USERNUM; i++) {
+        if (user_list[i].logged_in == 1){  
+            sprintf(result, "Nick: %s, IP: %s, Port: %i ", 
+                    user_list[i].name, user_list[i].ip, user_list[i].port);
+            strcat(reply, result);
+            printf("reply[%i]: %s\n", i, reply);
+        }    
+    }
+}
+
+void lookup_nick(char *token, char reply[])
+{
+    const char s[2] = " ";
+    token = strtok(NULL, s);
         char *target = strtok(token, "\n");
         printf("target: %s\n", target);
         int found = 0;
@@ -97,8 +101,32 @@ void process_cmd(char input[], char output[], int *usr_id)
         if (found == 0)
             sprintf(reply, "%s is not found.", target);
         
-        } else {
-            sprintf(reply, "You can either log in or exit the program.");
+}
+
+void logout(char reply[])
+{
+    sprintf(reply, "You are now logged out.");
+}
+
+void process_cmd(char input[], char output[], int *usr_id)
+{
+    const char s[2] = " ";
+    char reply[MAXLINE];
+    memset(&reply[0], 0, sizeof(reply)); // Flush reply
+    char *token;
+    token = strtok(strdup(input), s);
+    printf("Received token: %s\n", token);
+    
+    if (strcmp(token, "/login") == 0){
+        login(token, reply, usr_id);
+    } else if (strcmp(token, "/logout\n") == 0) {
+        logout(reply);
+    } else if (strcmp(token, "/lookup\n") == 0) {
+        lookup(token, reply);
+    } else if (strcmp(token, "/lookup") == 0) {
+        lookup_nick(token, reply);
+    } else {
+        sprintf(reply, "Available commands: /lookup, /lookup <nick>, /logout");
     }
 
     strcat(reply, "\n");
