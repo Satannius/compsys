@@ -22,6 +22,7 @@ void process_cmd(char input[], char output[])
     char reply[MAXLINE]; // PLACEHOLDER
     char *token;
     token = strtok(strdup(input), s);
+    memset(&reply[0], 0, sizeof(reply));
     printf("First token: %s \n", token);
     
     if (strcmp(token, "/login") == 0){
@@ -29,7 +30,7 @@ void process_cmd(char input[], char output[])
         token = strtok(NULL, s);
         for (int i = 0; i < USERNUM; i++){
             if (user_list[i].logged_in == 1){
-                sprintf(reply, "This user is already logged in. \n");
+                sprintf(reply, "This user is already logged in.");
                 break;
             }
              if (strcmp(token, user_list[i].name) == 0){
@@ -42,13 +43,16 @@ void process_cmd(char input[], char output[])
                     user_list[i].port = atoi (token);
                     printf("port: %d \n", user_list[i].port);
                     token = strtok(NULL, s);
-                    strcpy(user_list[i].ip, token);
-                    printf("IP: %s ", token);
+                    char *target = strtok(token, "\n");
+                    printf("target: %s\n", target);
+                    strcpy(user_list[i].ip, target);
+                    printf("IP: %s \n", target);
                     user_list[i].logged_in = 1;
+                    sprintf(reply, "You are now online.");
                     break;
                 }
                 else{
-                    sprintf(reply, "Invaild user or password. \n");
+                    sprintf(reply, "Invaild user or password.");
                     break;
                 }
             }
@@ -60,18 +64,14 @@ void process_cmd(char input[], char output[])
                 online++;
         }
         printf("People online: %i \n", online);
+        char result[MAXLINE];
         for (int i = 0; i < USERNUM; i++){
             if (user_list[i].logged_in == 1){  
-                char output[MAXLINE]; 
-                strcpy(output, "looking up people  ");
-                strcat(reply, output);
-                sprintf(output, "Nick: %s ", user_list[i].name);
-                strcat(reply, output);
-                sprintf(output, "IP: %s", user_list[i].ip);
-                strcat(reply, output);
-                sprintf(output, "Port: %i ", user_list[i].port);
-                strcat(reply, output);
-            }
+                sprintf(result, "Nick: %s, IP: %s, Port: %i ", 
+                        user_list[i].name, user_list[i].ip, user_list[i].port);
+                strcat(reply, result);
+                printf("reply[%i]: %s\n", i, reply);
+            }    
         }
     } else if (strcmp(token, "/lookup") == 0) {
         token = strtok(NULL, s);
@@ -82,27 +82,25 @@ void process_cmd(char input[], char output[])
             if ((strcmp(user_list[i].name, target) == 0) && 
                 (user_list[i].logged_in == 1)){
                 found = 1;
-                char output[MAXLINE];
-                sprintf(output, "%s is online. \n", user_list[i].name);
-                strcat(reply, output);
-                sprintf(output, "IP: %s\n", user_list[i].ip);
-                strcat(reply, output);
-                sprintf(output, "Port: %i", user_list[i].port);
-                strcat(reply, output);
+                sprintf(reply, "%s is online, IP: %s, Port: %i ",
+                        user_list[i].name, user_list[i].ip, user_list[i].port);
+                break;
             }
             else if ((strcmp(user_list[i].name, target) == 0) && 
                     (user_list[i].logged_in == 0)){
                 found = 1;
-                sprintf(reply, "%s is offline. \n", user_list[i].name);
+                sprintf(reply, "%s is offline.", user_list[i].name);
+                break;
             }
         }
         if (found == 0)
-            sprintf(reply, "%s is not found. \n", target);
+            sprintf(reply, "%s is not found.", target);
         
         } else {
-            sprintf(reply, "You can either log in or exit the program. \n");
+            sprintf(reply, "You can either log in or exit the program.");
     }
-    
+
+    strcat(reply, "\n");
     strcpy(output, reply); // Write reply via pointer to output
     printf("Received input: %s", input); // Notice if input contains linebreak
     printf("Writing %s to output\n", reply);
@@ -112,7 +110,7 @@ void process_cmd(char input[], char output[])
  * Based on csapp echo - read and echo text lines until client closes connection
  */
 /* $begin echo */
-oid echo(int connfd) 
+void echo(int connfd) 
 {
     size_t n;
     char input_buf[MAXLINE];
@@ -136,9 +134,9 @@ void *thread(void *vargp);
 
 void init_users() {
     strcpy(user_list[0].name, "banana");
-    strcpy(user_list[0].password, "123456");
+    strcpy(user_list[0].password, "123");
     strcpy(user_list[1].name, "fisk");
-    strcpy(user_list[1].password, "654321");
+    strcpy(user_list[1].password, "654");
     user_list[0].logged_in = 0;
     user_list[1].logged_in = 1;
 }
