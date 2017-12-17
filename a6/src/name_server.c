@@ -16,7 +16,7 @@ struct list{
 
 static struct list user_list[2];
 
-void process_cmd(char input[], char output[])
+void process_cmd(char input[], char output[], int *usr_id)
 {
     const char s[2] = " ";
     char reply[MAXLINE]; // PLACEHOLDER
@@ -48,6 +48,7 @@ void process_cmd(char input[], char output[])
                     strcpy(user_list[i].ip, target);
                     printf("IP: %s \n", target);
                     user_list[i].logged_in = 1;
+                    *usr_id = i;
                     sprintf(reply, "You are now online.");
                     break;
                 }
@@ -116,19 +117,23 @@ void echo(int connfd)
     char input_buf[MAXLINE];
     char output_buf[100];
     rio_t rio;
+    int usr_id;
 
     Rio_readinitb(&rio, connfd);
+
+    // Perform special handshake.
+
     while((n = Rio_readlineb(&rio, input_buf, MAXLINE)) != 0) { //line:netp:echo:eof
 	    // printf("server received %d bytes\n", (int)n);
-        printf("Bufsize: %ld", strlen(output_buf));
-        process_cmd(input_buf,output_buf); // Processes input and writes to output
+        process_cmd(input_buf,output_buf,&usr_id); // Processes input and writes to output
         Rio_writen(connfd, output_buf, strlen(output_buf));
-        printf("Bufsize: %ld", strlen(output_buf));
 
         // Flush buffers
         memset(&input_buf[0], 0, strlen(input_buf));
         memset(&output_buf[0], 0, strlen(output_buf));
     }
+    printf("User %s disconnected.\n", user_list[usr_id].name);
+    user_list[usr_id].logged_in = 0;
 }
 
 void *thread(void *vargp);

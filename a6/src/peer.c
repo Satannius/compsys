@@ -18,17 +18,16 @@ void login(char args[]) {
 
 
     // PERFORM SPECIAL HANDSHAKE
-    Rio_writen(clientfd, args, strlen(args));
-    Rio_readinitb(&rio, clientfd);
-    Rio_readlineb(&rio, buf, MAXLINE);
-    if (strcmp(buf, "You are now logged in.\n") != 0) {
-        Close(clientfd);
-
+    printf("'Special' handshaking...\n");
+    Rio_readinitb(&rio, clientfd);            // Setup rio
+    Rio_writen(clientfd, args, strlen(args)); // Send login args to server
+    Rio_readlineb(&rio, buf, MAXLINE);        // Read reply
+    if (!(strcmp(buf, "You are now online.\n") == 0)) {
+        Close(clientfd); // Close connection if reply not affirmative
+        return;
     }
+    printf("Succes!\n");
     Fputs(buf, stdout);
-    
-
-    // If fails: break
 
     while (Fgets(buf, MAXLINE, stdin) != NULL) {
         Rio_writen(clientfd, buf, strlen(buf)); // Send request
@@ -36,6 +35,7 @@ void login(char args[]) {
 	    Fputs(buf, stdout);                     // Print reply
     }
     Close(clientfd); //line:netp:echoclient:close
+    return;
 }
 
 /*
