@@ -19,7 +19,7 @@ void login(char args[]) {
 
     host = "localhost";
     port = "10000";
-
+    printf("args: %s", args);
     clientfd = Open_clientfd(host, port);
 
     // 'SPECIAL' HANDSHAKE
@@ -60,16 +60,19 @@ int main(int argc, char **argv)
 	    exit(0);
     }
 
-    char buf[MAXLINE];
+    int bufsize = 128;
+    char *buffer = (char*) malloc(bufsize);
     const char s[2] = " ";
     char *token;
+    char *cmd;
     
-    while (Fgets(buf, MAXLINE, stdin) != NULL) {
-        token = strtok(strdup(buf), s);
+    while (Fgets(buffer, bufsize, stdin) != NULL) {
+        cmd = strdup(buffer);
+        token = strtok(cmd, s);
 
         if (strcmp(token, "/login") == 0){
             Fputs("Establishing connection ...\n", stdout);
-            login(buf);
+            login(buffer);
         }
         else if (strcmp(token, "/exit\n") == 0){
             Fputs("Exiting ...\n", stdout);
@@ -78,6 +81,8 @@ int main(int argc, char **argv)
         else {
             Fputs("Available commands:\n/login <nick> <password> <ip> <port>\n/exit\n", stdout);
         }
+        
+        free(cmd);
     }
     
     exit(0);
