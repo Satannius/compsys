@@ -4,11 +4,6 @@ LD_FLAGS = -lpthread
 
 all : peer name_server
 
-echosingle :
-	$(CC) $(CFLAGS) -c echo.c -o echo.o
-	$(CC) $(CFLAGS) echoclient.c -o echoclient csapp.o $(LD_FLAGS)
-	$(CC) $(CFLAGS) echoserveri.c -o echoserveri csapp.o echo.o $(LD_FLAGS)
-
 rebuild : clean all
 
 csapp.o : csapp.c csapp.h
