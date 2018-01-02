@@ -1,0 +1,84 @@
+Theory:
+
+1.1.1: Good.
+
+1.1.2 Part 1: Uuuh... Since when does 2 + 1 + 5 + 24 = 37? Surely you meant 32. Otherwise correct.
+
+1.1.2 Part 2: Wrong. You're mixing up your units. It's 640 KB, not 640 Kb. b = bit and B = bytes = 8 bits. 
+
+1.2.1 Part 1: Good.
+
+1.2.1 Part 2: But you have the host address in the IP packet. The host field is needed as multiple websites might reside in the same IP address.
+
+1.2.2 Part 1: Good.
+
+1.2.2 Part 2: Good.
+
+1.3.1: Good.
+
+1.3.2 Part 1: Good.
+
+1.3.2 Part 2: Good.
+
+
+
+Programming part:
+
+First glance:
+If you hard code a port on the peer, don't make the name server take an argument to set that port.
+Seems robust and solid, good. Your lookup is only single-line though. Fix that by using something else than csapp's reading functions that stop at a new line.
+
+
+
+Peer:
+	1) Try to avoid using massive buffers like buf[MAXLINE]. MAXLINE is 8192 characters. Use malloc instead to only allocate as much as you need.
+
+	2) If you want to define a char, use single quotes > ' < instead of double quotes > " <. No need to use a small string. Like so:
+	const char s = ' ';
+
+	3) Remember, strdup dynamically allocates a new string. You need to free() it. You don't however. Not sure why you are even using strdup here to be honest.
+
+	- Otherwise okay.
+
+***** REPLY *****
+1) What would be a good way to determine how many chars we need?
+
+2) Changing “const char s[2] = “ “;” causes seg faults. What else needs to be changed if we go for the “const char s = ‘ ‘;” approach?
+
+3) We decided to use strdup to avoid potential conflicts caused by using the same buffer for input and as arguments to strtok. Tokenizing buf directly would split buf. Changing “strdup(buf)” to “buf” caused the server to hang. What did you have in mind?
+
+
+
+Nameserver:
+	1) It is customary to only put function declarations in .h files - not function definitions. Put function definitions in the .c file.
+
+	2) Again, avoid overusing static buffers, especially buffers like char output_buf[100]; with magic numbers. You're using these buffers all over the place.
+
+	3) If reply is a char array (or equivalently a char pointer) then "&reply[0]" is equivalent to simply "reply".
+
+	4) I don't mind you being inspired by the echo server, but at least rename the function...
+
+	5) Again, remember to free if you use strdup. I honestly don't think you need to use it though.
+
+	6) You have a next field in your user struct, presumably because you wanted to use a linked list. Be sure to remove any unneeded parts of your code.
+
+	- Otherwise seems fine.
+
+***** REPLY *****
+1) Definitions moved to .c file as suggested. Needs some documentation though.
+
+2) All changed to dynamically allocated buffers. What would be a good way to determine how many chars we need?
+
+3) Wrote “reply” instead of equivalent “&reply[0]”
+
+4) Echo function renamed.
+
+5) We now free memory allocated using strdup.
+
+6) Removed “next” field.
+
+Testing:
+	- Good structured testing and documentation of it. Good.
+
+Report:
+Your report is good but I'm missing some thoughts and details about your protocol. How does the peer and name server communicate? What kind of messages do they send? How do you signal errors etc.?

@@ -3,6 +3,7 @@
 #include "peer.h"
 
 #define ARGNUM 0 // TODO: Put the number of args you want to take
+#define BUFSIZE 128
 
 int process_reply(char input[])
 {   
@@ -14,7 +15,8 @@ int process_reply(char input[])
 
 void login(char args[]) {
     int clientfd;
-    char *host, *port, buf[MAXLINE];
+    char *buffer = (char*) malloc(BUFSIZE);
+    char *host, *port;
     rio_t rio;
 
     host = "localhost";
@@ -26,25 +28,26 @@ void login(char args[]) {
     printf("'Special' handshaking...\n");
     Rio_readinitb(&rio, clientfd);            // Setup rio
     Rio_writen(clientfd, args, strlen(args)); // Send login args to server
-    Rio_readlineb(&rio, buf, MAXLINE);        // Read reply
-    if (!(strcmp(buf, "You are now logged in.\n") == 0)) {
+    Rio_readlineb(&rio, buffer, BUFSIZE);        // Read reply
+    if (!(strcmp(buffer, "You are now logged in.\n") == 0)) {
         printf("Failed.\n"); // Close connection if reply not affirmative
-	    Fputs(buf, stdout);      
+	    Fputs(buffer, stdout);      
         Close(clientfd); 
         return;
     }
     printf("Succes!\n");
-    Fputs(buf, stdout); // Print server reply to stdout
+    Fputs(buffer, stdout); // Print server reply to stdout
 
     // Echo-like continuous, open connection
-    while (Fgets(buf, MAXLINE, stdin) != NULL) {
-        Rio_writen(clientfd, buf, strlen(buf)); // Send request
-	    Rio_readlineb(&rio, buf, MAXLINE);      // Read reply
-	    Fputs(buf, stdout);                     // Print reply
-        if (process_reply(buf) == -1) {
+    while (Fgets(buffer, BUFSIZE, stdin) != NULL) {
+        Rio_writen(clientfd, buffer, strlen(buffer)); // Send request
+	    Rio_readlineb(&rio, buffer, BUFSIZE);      // Read reply
+	    Fputs(buffer, stdout);                     // Print reply
+        if (process_reply(buffer) == -1) {
             break;
         }
     }
+    free(buffer);
     Close(clientfd); //line:netp:echoclient:close
     return;
 }
