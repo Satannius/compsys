@@ -4,6 +4,7 @@
 
 #define ARGNUM 0 // TODO: Put the number of args you want to take
 #define BUFSIZE 128
+#define DEBUG 1
 
 int process_reply(char input[])
 {   
@@ -21,25 +22,26 @@ void login(char args[]) {
 
     host = "localhost";
     port = "10000";
-    printf("args: %s", args);
     clientfd = Open_clientfd(host, port);
 
     // 'SPECIAL' HANDSHAKE
-    printf("'Special' handshaking...\n");
     Rio_readinitb(&rio, clientfd);            // Setup rio
     Rio_writen(clientfd, args, strlen(args)); // Send login args to server
     Rio_readlineb(&rio, buffer, BUFSIZE);        // Read reply
     if (!(strcmp(buffer, "You are now logged in.\n") == 0)) {
-        printf("Failed.\n"); // Close connection if reply not affirmative
+        // Close connection if reply not affirmative
 	    Fputs(buffer, stdout);      
         Close(clientfd); 
         return;
     }
-    printf("Succes!\n");
+
     Fputs(buffer, stdout); // Print server reply to stdout
 
     // Echo-like continuous, open connection
     while (Fgets(buffer, BUFSIZE, stdin) != NULL) {
+        // Write some function to process name_server and chat_server cmds
+
+
         Rio_writen(clientfd, buffer, strlen(buffer)); // Send request
 	    Rio_readlineb(&rio, buffer, BUFSIZE);      // Read reply
 	    Fputs(buffer, stdout);                     // Print reply
