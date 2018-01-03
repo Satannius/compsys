@@ -14,12 +14,12 @@ void enqueue(linked_queue* queue,  char* buffer, size_t len) {
     new_node -> data_len = len;
     memcpy(new_node -> data, buffer, len);
     
-    if (queue -> tail == NULL) {
+    if (queue -> tail == NULL) {            // If no items enqueued, set head to new node
         queue -> head = new_node;
-    } else {
+    } else {                                // If items enququed, set new node next-after tail
         queue -> tail -> next = new_node;
     }
-    queue -> tail = new_node;
+    queue -> tail = new_node;               // Set new node to tail
 }
 
 ssize_t dequeue(linked_queue* queue, char* buffer, size_t len) {
@@ -34,21 +34,21 @@ ssize_t dequeue(linked_queue* queue, char* buffer, size_t len) {
         return -1;
     }
     
-    if (cur_head -> data_len <= len) {
-        memcpy(buffer, cur_head->data, cur_head->data_len);
-        if(cur_head == queue -> tail) {
+    if (cur_head -> data_len <= len) {                      // If data_len is less than requested len
+        memcpy(buffer, cur_head->data, cur_head->data_len); // Copy data to pointed buffer
+        if(cur_head == queue -> tail) {                     // If head == tail, set both to null.
             queue -> head = queue -> tail = NULL;
         }
-        queue -> head = cur_head -> next;
-        free(cur_head -> data);
+        queue -> head = cur_head -> next;                   // Update head-pointer to next node
+        free(cur_head -> data);                             // Free memory
         free(cur_head);
         return 0;
-    } else {
-        memcpy(buffer, cur_head -> data, len);
+    } else {                                                // If data_len is more than requested len
+        memcpy(buffer, cur_head -> data, len);              // Copy data to pointed buffer
         memmove(cur_head -> data, cur_head -> data + len, cur_head -> data_len - len);
-        cur_head -> data_len -= len;
-        cur_head -> data = Realloc(cur_head -> data, cur_head -> data_len);
-        return cur_head -> data_len;
+        cur_head -> data_len -= len;                        // Update data_len: subtract requested len
+        cur_head -> data = Realloc(cur_head -> data, cur_head -> data_len); // Realloc necessary space
+        return cur_head -> data_len;                        // Return remaining len to be read.
     }
 }
 
