@@ -109,6 +109,33 @@ void logout(char reply[])
     sprintf(reply, "You are now logged out.");
 }
 
+void msg(struct list *usr_lst, char *token, char reply[])
+{
+    const char s[2] = " ";
+    token = strtok(NULL, s);
+    char *target = strtok(token, "\n");
+    int found = 0; // set to 1 if a match is found 
+    for (int i = 0; i < USERNUM; i++) {
+        if ((strcmp(usr_lst[i].name, target) == 0) && 
+            (usr_lst[i].logged_in == 1)) {
+            found = 1;
+            sprintf(reply, "%s %i", usr_lst[i].ip, usr_lst[i].port);
+            return;
+        }
+        else if ((strcmp(usr_lst[i].name, target) == 0) && 
+                (usr_lst[i].logged_in == 0)) {
+            found = 1;
+            sprintf(reply, "%s is offline.", usr_lst[i].name);
+            return;
+        }
+    }
+    if (found == 0)
+        // Error msg if there is no match
+        sprintf(reply, "%s is not found.", target);
+        return;
+        
+}
+
 void process_cmd(struct list *usr_lst, char input[], char output[], int *usr_id)
 {
     const char s[2] = " ";
@@ -127,6 +154,8 @@ void process_cmd(struct list *usr_lst, char input[], char output[], int *usr_id)
         lookup(usr_lst, token, reply);
     } else if (strcmp(token, "/lookup") == 0) {
         lookup_nick(usr_lst, token, reply);
+    } else if (strcmp(token, "/msg") == 0) {
+        msg(usr_lst, token, reply);
     } else {
         sprintf(reply, "Available commands: /lookup, /lookup <nick>, /logout");
     }
